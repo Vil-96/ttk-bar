@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ТТК Бар" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Тренажер и Зачетка ТТК — Бар</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-locked {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-20">
+
+  <!-- Всплывающее уведомление -->
+  <div id="toast-alert" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-rose-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-rose-400 transition-all text-center max-w-xs"></div>
+
+  <!-- Шапка -->
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-xl mx-auto flex items-center justify-between gap-2">
+      <div>
+        <h1 class="text-base font-bold text-amber-400 leading-tight flex items-center gap-1.5">
+          <span>🍸 Аттестация ТТК (<span id="total-ttk-count">97</span>)</span>
+          <span id="sync-indicator" class="text-[10px] font-normal text-slate-400"></span>
+        </h1>
+        <button onclick="openUserModal()" class="mt-0.5 flex items-center gap-1 text-xs text-slate-300 hover:text-amber-300 bg-slate-800/90 px-2 py-0.5 rounded-md border border-slate-700">
+          <span>👤</span>
+          <span id="bartender-name-badge" class="font-semibold">Указать имя</span>
+          <span class="text-[10px] text-slate-400">✏️</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="text-right">
+          <div class="text-[11px] text-slate-400" id="header-status-label">Порог: 85% • ⏱ 30 сек</div>
+          <div class="text-sm font-extrabold text-emerald-400" id="header-progress-badge">Зачетка: 0 / 6</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Навигация по 5 режимам -->
+  <div class="max-w-xl mx-auto w-full px-4 pt-3">
+    <div class="grid grid-cols-5 gap-1 bg-slate-800/90 p-1 rounded-xl border border-slate-700/70 text-[11px] font-medium">
+      <button onclick="setMode('exam')" id="tab-exam" class="py-2 px-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition">🎓 Зачетка</button>
+      <button onclick="setMode('practice')" id="tab-practice" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">🎯 Тренир.</button>
+      <button onclick="setMode('builder')" id="tab-builder" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">🧪 Сборка</button>
+      <button onclick="setMode('flashcards')" id="tab-flashcards" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">🃏 Карточки</button>
+      <button onclick="setMode('list')" id="tab-list" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">📋 База</button>
+    </div>
+  </div>
+
+  <!-- Основной контейнер -->
+  <main class="max-w-xl mx-auto w-full px-4 py-3 flex-1 space-y-3">
+
+    <!-- РЕЖИМ 1: ЗАЧЕТКА И СЛЕПОЙ ЭКЗАМЕН С ТАЙМЕРОМ -->
+    <section id="view-exam" class="space-y-3">
+      <div id="exam-container"></div>
+    </section>
+
+    <!-- Блок выбора категории (для Тренировки, Сборки, Карточек и Базы) -->
+    <div id="shared-category-bar" class="hidden space-y-1.5">
+      <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Фильтр раздела:</div>
+      <div class="flex flex-wrap gap-1.5 text-xs">
+        <button onclick="setPracticeCategory('ALL')" id="pcat-ALL" class="px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition">🌐 Все (97)</button>
+        <button onclick="setPracticeCategory('WEAK')" id="pcat-WEAK" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40">🔥 Мои ошибки (<span id="weak-count-badge">0</span>)</button>
+        <button onclick="setPracticeCategory('ALC')" id="pcat-ALC" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🍸 Алк. коктейли (24)</button>
+        <button onclick="setPracticeCategory('NA')" id="pcat-NA" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🥤 Б/А и лимонады (11)</button>
+        <button onclick="setPracticeCategory('COFFEE')" id="pcat-COFFEE" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">☕ Кофе и Матча (19)</button>
+        <button onclick="setPracticeCategory('TEA')" id="pcat-TEA" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🫖 Чаи и Глинтв. (11)</button>
+        <button onclick="setPracticeCategory('KIDS')" id="pcat-KIDS" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🧸 Детское (11)</button>
+        <button onclick="setPracticeCategory('PREP')" id="pcat-PREP" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🧪 Настойки и Сеты (21)</button>
+      </div>
+    </div>
+
+    <!-- РЕЖИМ 2: ТРЕНИРОВКА С ПОДСКАЗКАМИ -->
+    <section id="view-practice" class="hidden space-y-3">
+      <div class="flex flex-wrap gap-1.5 text-xs">
+        <button onclick="setQuizFilter('all')" id="qf-all" class="px-3 py-1 rounded-full bg-slate-700 text-amber-300 font-semibold border border-amber-500/40">Все вопросы</button>
+        <button onclick="setQuizFilter('qty')" id="qf-qty" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">⚖️ Граммовки</button>
+        <button onclick="setQuizFilter('glass')" id="qf-glass" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">🥃 Посуда / Выход</button>
+        <button onclick="setQuizFilter('garnish')" id="qf-garnish" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">🍊 Украшение</button>
+      </div>
+      <div id="practice-container" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4"></div>
+    </section>
+
+    <!-- РЕЖИМ 3: СБОРКА ТТК -->
+    <section id="view-builder" class="hidden space-y-4">
+      <div id="builder-container" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4"></div>
+    </section>
+
+    <!-- РЕЖИМ 4: ФЛЕШ-КАРТОЧКИ -->
+    <section id="view-flashcards" class="hidden space-y-3">
+      <div class="flex items-center justify-between text-xs text-slate-400">
+        <span id="fc-counter">Карточка 1</span>
+        <span>Нажми на карточку, чтобы перевернуть</span>
+      </div>
+      <div id="fc-card" onclick="flipCard()" class="cursor-pointer select-none bg-slate-800 border border-slate-700 rounded-2xl p-5 min-h-[340px] flex flex-col justify-between shadow-lg transition hover:border-amber-500/40"></div>
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <button onclick="prevCard()" class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-sm border border-slate-700">⬅️ Назад</button>
+        <button onclick="nextCard()" class="py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Дальше ➡️</button>
+      </div>
+    </section>
+
+    <!-- РЕЖИМ 5: СПИСОК ВСЕХ ТТК -->
+    <section id="view-list" class="hidden space-y-3">
+      <div class="flex gap-2">
+        <input type="text" id="search-input" oninput="renderList()" placeholder="Поиск по названию, ингредиенту или бокалу..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400" />
+        <button onclick="forceCleanNames()" title="Сбросить все переименования" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-300 hover:bg-slate-700 shrink-0">Сброс имён</button>
+      </div>
+      <div id="list-container" class="space-y-3"></div>
+    </section>
+
+  </main>
+
+  <!-- Модальное окно ввода имени бармена -->
+  <div id="user-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <h3 class="text-base font-bold text-amber-400">👤 Представься для Зачетки</h3>
+      <p class="text-xs text-slate-300">Введи свое имя. Результаты сдачи каждой категории будут автоматически отмечаться в твоей личной зачетке и в сводном табеле Google Таблицы.</p>
+      <input type="text" id="user-name-input" placeholder="Например: Виль" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
+      <button onclick="saveUserName()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно переименования -->
+  <div id="rename-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <h3 class="text-base font-bold text-amber-400">✏️ Переименовать позицию</h3>
+      <input type="text" id="rename-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeRenameModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-200 text-sm">Отмена</button>
+        <button onclick="saveRename()" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 👇 ВСТАВЬ СЮДА ССЫЛКУ НА ВЕБ-ПРИЛОЖЕНИЕ GOOGLE APPS SCRIPT (заканчивается на /exec):
+    const EXTERNAL_API_URL = "https://script.google.com/macros/s/AKfycby6tvIOQJYgkaa1OxnBIhe9guhDfxC9kejXsQZ6UmUAfW5T5GRLBYVAVFDE47qqqwcNgQ/exec";
+    // =========================================================================
+
+    const PASS_THRESHOLD = 85;
+    const QUESTION_TIME_SEC = 30;
+    const DATA_VERSION = 'v5_github_sync_2026';
+
+    const CATEGORY_META = {
+      ALC:    { code: "ALC",    title: "🍸 Алкогольные коктейли", count: 24, examQuestions: 24, desc: "24 вопроса без повторов по всем 24 коктейлям бара" },
+      NA:     { code: "NA",     title: "🥤 Б/А коктейли и лимонады", count: 11, examQuestions: 15, desc: "15 вопросов: лимонады, смузи, мохито б/а, виски сауэр б/а" },
+      COFFEE: { code: "COFFEE", title: "☕ Кофе, Матча и Какао", count: 19, examQuestions: 19, desc: "19 вопросов по каждому кофейному напитку и рафу" },
+      TEA:    { code: "TEA",    title: "🫖 Фирменные чаи и Глинтвейны", count: 11, examQuestions: 15, desc: "15 вопросов по всем чаям в чайниках и глинтвейнам" },
+      KIDS:   { code: "KIDS",   title: "🧸 Детское меню и Милкшейки", count: 11, examQuestions: 15, desc: "15 вопросов: фигурные шейки (Ёжик, Хорёк, Лиса) и бабл-ти" },
+      PREP:   { code: "PREP",   title: "🧪 Настойки су-вид, Пребатчи и Сеты", count: 21, examQuestions: 21, desc: "21 вопрос: закладки настоек су-вид, выходы в мл и сеты шотов" },
+      ALL:    { code: "ALL",    title: "🌐 Итоговый экзамен по всему меню", count: 97, examQuestions: 25, desc: "Сводный билет из 25 вопросов по всем 6 станциям бара" }
+    };
+
+    const MAIN_STATIONS = ["ALC", "NA", "COFFEE", "TEA", "KIDS", "PREP"];
+
+    let allItems = [
+      // ================= 1. АЛКОГОЛЬНЫЕ КОКТЕЙЛИ (24) =================
+      { id: 1, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Фиеро спритц", method: "Основа в бокал", glass: "Бокал Мартини",
+        ingredients: [{ name: "Матрини фиеро", qty: "60", unit: "мл" }, { name: "Содовая", qty: "30", unit: "мл" }, { name: "Игристое кокт.", qty: "60", unit: "мл" }],
+        garnish: [{ name: "Апельсин", qty: "30", unit: "г" }] },
+      { id: 2, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Фиеро Тоник", method: "Основа в бокал", glass: "Бокал Мартини",
+        ingredients: [{ name: "Матрини фиеро", qty: "70", unit: "мл" }, { name: "Рич тоник 1 л", qty: "100", unit: "мл" }],
+        garnish: [{ name: "Апельсин", qty: "30", unit: "г" }] },
+      { id: 3, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Кловер клаб", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Джин коктейльный", qty: "45", unit: "мл" }, { name: "Кордиал малина-гранат", qty: "30", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "20", unit: "мл" }, { name: "Апероль", qty: "15", unit: "мл" }, { name: "ПФ сахарный сироп", qty: "5", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }],
+        garnish: [{ name: "Клубника сублим", qty: "1", unit: "г" }] },
+      { id: 4, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Смородиновый Негрони", method: "Основа в смесительный стакан", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Джин коктейльный", qty: "25", unit: "мл" }, { name: "Красный вермут", qty: "20", unit: "мл" }, { name: "Кампари", qty: "20", unit: "мл" }, { name: "Кордиал смородина", qty: "20", unit: "мл" }],
+        garnish: [{ name: "Леденец изомальтовый", qty: "1", unit: "шт." }, { name: "Смородина с/м", qty: "2", unit: "г" }] },
+      { id: 5, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Амбра", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Ром коктейльный", qty: "40", unit: "мл" }, { name: "ПФ Настойка маракуйя", qty: "20", unit: "мл" }, { name: "Сок ананасовый", qty: "30", unit: "мл" }, { name: "Сироп Персик", qty: "15", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "20", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }],
+        garnish: [{ name: "Леденец изомальтовый", qty: "1", unit: "шт." }] },
+      { id: 6, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Нувола", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Ванильная водка", qty: "50", unit: "мл" }, { name: "Кордиал земляничный", qty: "25", unit: "мл" }, { name: "Яблочный сок", qty: "25", unit: "мл" }],
+        garnish: [{ name: "Ананасовая пена", qty: "25", unit: "г" }, { name: "Клубника сублим", qty: "0,5", unit: "г" }] },
+      { id: 7, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Сангрия манго-груша-лемонграсс порция", method: "Основа в бокал", glass: "Бокал для красного вина, 550 мл, Crystalex",
+        ingredients: [{ name: "Белуга груша-липа", qty: "20", unit: "мл" }, { name: "Кордиал манго-апельсин", qty: "30", unit: "мл" }, { name: "ПФ Сироп лемонграсс", qty: "10", unit: "мл" }, { name: "Белое кокт. вино", qty: "100", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "10", unit: "мл" }, { name: "Содовая", qty: "30", unit: "мл" }],
+        garnish: [{ name: "Тимьян", qty: "1", unit: "шт." }, { name: "Яблоко свежее", qty: "10", unit: "г" }] },
+      { id: 8, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Сангрия манго-груша-лемонграсс КУВШИН", method: "Основа в кувшин", glass: "Декантер со льдом",
+        ingredients: [{ name: "Белуга груша-липа", qty: "70", unit: "мл" }, { name: "Кордиал манго-апельсин", qty: "60", unit: "мл" }, { name: "ПФ Сироп лемонграсс", qty: "20", unit: "мл" }, { name: "Белое кокт. вино", qty: "200", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "30", unit: "мл" }, { name: "Содовая", qty: "70", unit: "мл" }],
+        garnish: [{ name: "Тимьян", qty: "1", unit: "шт." }, { name: "Яблоко свежее", qty: "10", unit: "г" }] },
+      { id: 9, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Спритц лайм-базилик", method: "Основа в бокал + лёд + слоем вино", glass: "Бокал для красного вина, 550 мл, Crystalex",
+        ingredients: [{ name: "ПФ Лаймовый джус", qty: "25", unit: "мл" }, { name: "Кордиал базилик", qty: "30", unit: "мл" }, { name: "Игристое кокт.", qty: "100", unit: "мл" }, { name: "Красное кокт. вино (слоем)", qty: "30", unit: "мл" }],
+        garnish: [{ name: "Лист базилика", qty: "0,5", unit: "г" }] },
+      { id: 10, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Персиковый Дублин сауэр", method: "Основа в шейкер + слоем вино", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Виски Гроган", qty: "30", unit: "мл" }, { name: "Персиковый ликер", qty: "20", unit: "мл" }, { name: "Персиковый сироп", qty: "10", unit: "мл" }, { name: "Персиковый нектар", qty: "10", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "20", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }, { name: "Красное кокт. вино (слоем)", qty: "30", unit: "мл" }],
+        garnish: [{ name: "Чипс апельсина (1/2)", qty: "3", unit: "г" }] },
+      { id: 11, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Амаретто сауэр", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Ликер Амаретто", qty: "20", unit: "мл" }, { name: "Ром Ботафого", qty: "20", unit: "мл" }, { name: "Ром коктейльный", qty: "10", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "20", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "15", unit: "мл" }, { name: "Ананасовый сок", qty: "30", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }],
+        garnish: [{ name: "ПФ Грильяж", qty: "7", unit: "г" }] },
+      { id: 12, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Ежевичная маргарита", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Кордиал Ежевика", qty: "40", unit: "мл" }, { name: "Текила коктейльная", qty: "30", unit: "мл" }, { name: "Трипл сек", qty: "20", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "30", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "10", unit: "мл" }],
+        garnish: [{ name: "Ежевика с/м", qty: "7", unit: "г" }, { name: "Соль (краст на бокал)", qty: "0,2", unit: "г" }] },
+      { id: 13, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Лимончелло спритц", method: "Основа в бокал", glass: "Бокал для красного вина, 550 мл, Crystalex",
+        ingredients: [{ name: "Лимончелло", qty: "40", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "20", unit: "мл" }, { name: "Вермут тет де шаваль", qty: "10", unit: "мл" }, { name: "Игристое кокт.", qty: "100", unit: "мл" }],
+        garnish: [{ name: "Конфета на палочке ФК", qty: "1", unit: "шт." }] },
+      { id: 14, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Сауэр с персиком и клубникой", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Ром коктейльный", qty: "40", unit: "мл" }, { name: "Клубничное пюре", qty: "25", unit: "мл" }, { name: "Ликер персик", qty: "10", unit: "мл" }, { name: "Суперджус лимон", qty: "20", unit: "мл" }, { name: "Яблочный сок", qty: "20", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }],
+        garnish: [{ name: "Клубника сублим.", qty: "0,5", unit: "г" }] },
+      { id: 15, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Смородиновый джин тоник", method: "Основа в бокал", glass: "Бокал Алегра (Aska)",
+        ingredients: [{ name: "Кордиал смородина", qty: "40", unit: "мл" }, { name: "Джин коктейльный", qty: "50", unit: "мл" }, { name: "Тоник", qty: "110", unit: "мл" }],
+        garnish: [{ name: "Смородина с/м", qty: "5", unit: "г" }, { name: "Базилик", qty: "0,5", unit: "г" }] },
+      { id: 16, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Мохито алкогольный", method: "Основа в бокал", glass: "Бокал Алегра (Aska)",
+        ingredients: [{ name: "Кордиал Мохито", qty: "60", unit: "мл" }, { name: "Ром коктейльный", qty: "40", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "10", unit: "мл" }, { name: "Содовая", qty: "90", unit: "мл" }],
+        garnish: [{ name: "Лайм (круг)", qty: "15", unit: "г" }, { name: "Мята", qty: "1", unit: "г" }] },
+      { id: 17, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Спритц клубника-базилик", method: "Основа в бокал", glass: "Бокал для красного вина, 550 мл, Crystalex",
+        ingredients: [{ name: "Пюре клубника", qty: "30", unit: "мл" }, { name: "Кордиал базилик", qty: "30", unit: "мл" }, { name: "Вермут тет де шаваль", qty: "10", unit: "мл" }, { name: "Игристое кокт.", qty: "120", unit: "мл" }],
+        garnish: [{ name: "Листочек базилика", qty: "1", unit: "г" }] },
+      { id: 18, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Пасадена", method: "Основа в шейкер", glass: "Олд Фешн 355 мл \"Пульс\"",
+        ingredients: [{ name: "Пюре маракуйя", qty: "10", unit: "мл" }, { name: "Кордиал манго-апельсин", qty: "20", unit: "мл" }, { name: "Сироп дыня", qty: "10", unit: "мл" }, { name: "Джин коктейльный", qty: "50", unit: "мл" }, { name: "Ананасовый сок", qty: "15", unit: "мл" }, { name: "Суперджус лимон", qty: "10", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }],
+        garnish: [{ name: "Мармелад на шпажке", qty: "1", unit: "шт." }] },
+      { id: 19, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Тай", method: "Основа в шейкер + пена на основу", glass: "Хайбол (Стакан) 370мл \"Пульс\"",
+        ingredients: [{ name: "Кордиал манго-апельсин", qty: "30", unit: "мл" }, { name: "Лимончелло", qty: "40", unit: "мл" }, { name: "Ликер адвокат", qty: "30", unit: "мл" }, { name: "Суперджус лимон", qty: "20", unit: "мл" }, { name: "Ананасовая пена (на основу)", qty: "20", unit: "г" }],
+        garnish: [{ name: "Апельсиновый чипс", qty: "2", unit: "г" }] },
+      { id: 20, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Лонг-Айленд Айс Ти", method: "Основа в шейкер + кола на лед", glass: "Бокал Алегра (Aska)",
+        ingredients: [{ name: "ПФ Пребатч для лонг айленда", qty: "100", unit: "мл" }, { name: "Добрый кола (на лед)", qty: "100", unit: "мл" }],
+        garnish: [{ name: "Лайм кружок", qty: "10", unit: "г" }] },
+      { id: 21, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Спритц Персик Маракуйя", method: "Основа в бокал", glass: "Бокал для красного вина, 550 мл, Crystalex",
+        ingredients: [{ name: "Пюре маракуйя", qty: "20", unit: "мл" }, { name: "Ликер персик", qty: "20", unit: "мл" }, { name: "Вермут тет де шаваль", qty: "15", unit: "мл" }, { name: "Игристое кокт. (на основу)", qty: "120", unit: "мл" }],
+        garnish: [{ name: "Лайм кружок", qty: "10", unit: "г" }, { name: "Мята", qty: "1", unit: "г" }] },
+      { id: 22, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Апероль спритц", method: "Основа в бокал", glass: "Бокал Aperol",
+        ingredients: [{ name: "Апероль", qty: "60", unit: "мл" }, { name: "Игристое кокт.", qty: "70", unit: "мл" }, { name: "Содовая", qty: "50", unit: "мл" }],
+        garnish: [{ name: "Апельсин (полукруг)", qty: "20", unit: "г" }] },
+      { id: 23, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Кампари спритц", method: "Основа в бокал", glass: "Бокал Kampari",
+        ingredients: [{ name: "Кампари", qty: "30", unit: "мл" }, { name: "Содовая", qty: "60", unit: "мл" }, { name: "Игристое кокт.", qty: "80", unit: "мл" }],
+        garnish: [{ name: "Апельсин", qty: "20", unit: "г" }] },
+      { id: 24, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Сарти спритц", method: "Основа в бокал", glass: "Бокал SARTI",
+        ingredients: [{ name: "Аперитив Сарти", qty: "60", unit: "мл" }, { name: "Игристое кокт.", qty: "70", unit: "мл" }, { name: "Содовая", qty: "50", unit: "мл" }],
+        garnish: [{ name: "Лайм кружок", qty: "10", unit: "г" }] },
+
+      // ================= 2. Б/А КОКТЕЙЛИ И ЛИМОНАДЫ (11) =================
+      { id: 25, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Облепиха-имбирь", method: "Основа в бокал", glass: "Хайбол 370мл",
+        ingredients: [{ name: "Пюре Облепихи", qty: "25", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "10", unit: "мл" }, { name: "Сироп Сангрия ФК", qty: "30", unit: "мл" }, { name: "Содовая", qty: "135", unit: "мл" }],
+        garnish: [{ name: "Тимьян", qty: "1", unit: "г" }, { name: "Сота медовая", qty: "1", unit: "шт." }] },
+      { id: 26, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Малина-гранат-мята", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Кордиал Малина-гранат", qty: "55", unit: "мл" }, { name: "Содовая", qty: "135", unit: "мл" }],
+        garnish: [{ name: "ПФ мята", qty: "1", unit: "вет" }, { name: "Лайм кружок", qty: "1", unit: "шт." }] },
+      { id: 27, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Тропический смузи", method: "Основа в блендер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Шпинат свежий", qty: "20", unit: "г" }, { name: "Банан", qty: "120", unit: "г" }, { name: "Кордиал Манго апельсин", qty: "40", unit: "мл" }, { name: "Апельсиновый сок", qty: "140", unit: "мл" }, { name: "Лед кусковой", qty: "70", unit: "г" }],
+        garnish: [{ name: "Фисташка тертая", qty: "3", unit: "г" }, { name: "Базилик (маленький)", qty: "1", unit: "шт." }] },
+      { id: 28, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лимонад ежевика-лайм", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Кордиал Ежевика", qty: "60", unit: "мл" }, { name: "Содовая", qty: "120", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "10", unit: "мл" }],
+        garnish: [{ name: "Ежевика с/м", qty: "7", unit: "г" }] },
+      { id: 29, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "б/а Виски сауэр", method: "Основа в шейкер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Виски б/а", qty: "50", unit: "мл" }, { name: "Суперджус лимон", qty: "20", unit: "мл" }, { name: "Яблочный сок", qty: "20", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "20", unit: "мл" }, { name: "Пенообразователь", qty: "2", unit: "кап" }],
+        garnish: [{ name: "Грильяж", qty: "7", unit: "г" }] },
+      { id: 30, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Цитрусовый лимонад с манго (Кувшин)", method: "Основа в кувшин", glass: "Кувшин Декантер + лед",
+        ingredients: [{ name: "Кордиал Манго апельсин", qty: "50", unit: "мл" }, { name: "Суперджус лимон", qty: "30", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "40", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "70", unit: "мл" }, { name: "Содовая", qty: "380", unit: "мл" }],
+        garnish: [{ name: "Без украшения (по ТТК)", qty: "0", unit: "г" }] },
+      { id: 31, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Мохито БА", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Кордиал Мохито", qty: "50", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "10", unit: "мл" }, { name: "Содовая", qty: "130", unit: "мл" }],
+        garnish: [{ name: "Лайм кружок", qty: "10", unit: "г" }, { name: "Мята", qty: "1", unit: "г" }] },
+      { id: 32, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лимонад Базилик-клубника", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Пюре Клубника", qty: "30", unit: "мл" }, { name: "Кордиал Базилик", qty: "25", unit: "мл" }, { name: "Содовая", qty: "135", unit: "мл" }],
+        garnish: [{ name: "Базилик", qty: "1", unit: "г" }, { name: "Клубника", qty: "0,5", unit: "г" }] },
+      { id: 33, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лавандовый лимонад", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Кордиал Лаванда", qty: "60", unit: "мл" }, { name: "Суперджус лимон", qty: "15", unit: "мл" }, { name: "Содовая", qty: "130", unit: "мл" }],
+        garnish: [{ name: "Круг лимона", qty: "2", unit: "шт." }] },
+      { id: 34, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лимонад манго-апельсин", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Кордиал Манго апельсин", qty: "60", unit: "мл" }, { name: "Содовая", qty: "120", unit: "мл" }],
+        garnish: [{ name: "Апельсиновый чипс", qty: "1/2", unit: "шт." }] },
+      { id: 35, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лимонад классический", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Суперджус лимон", qty: "20", unit: "мл" }, { name: "Содовая", qty: "150", unit: "мл" }, { name: "Сироп в асс.", qty: "40", unit: "мл" }],
+        garnish: [{ name: "Лайм (кружок)", qty: "10", unit: "г" }, { name: "Апельсин (полукружок)", qty: "20", unit: "г" }] },
+
+      // ================= 3. КОФЕ И КОФЕЙНЫЕ НАПИТКИ (19) =================
+      { id: 36, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Какао нутелла", method: "Основа в питчер", glass: "Magistro «Грани», 260 мл",
+        ingredients: [{ name: "Горячий шоколад WTS", qty: "15", unit: "г" }, { name: "Паста Nutella", qty: "20", unit: "г" }, { name: "Сливки 10%", qty: "80", unit: "мл" }, { name: "Молоко", qty: "100", unit: "мл" }],
+        garnish: [{ name: "Нутелла", qty: "10", unit: "г" }, { name: "Маршмеллоу", qty: "5", unit: "г" }, { name: "Фисташка дробленая", qty: "1", unit: "г" }] },
+      { id: 37, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Аффогато с нутеллой", method: "Основа в бокал", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Паста Nutella", qty: "20", unit: "г" }, { name: "Эспрессо допио", qty: "1", unit: "шт" }, { name: "Мороженое (2 шарика)", qty: "80", unit: "г" }],
+        garnish: [{ name: "Савоярди", qty: "2", unit: "шт" }, { name: "Какао золотой ярлык", qty: "0,5", unit: "г" }, { name: "Фисташка дробленая", qty: "1", unit: "г" }] },
+      { id: 38, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Раф апельсин-ваниль", method: "Основа в питчер", glass: "Barista Macarons 250 мл",
+        ingredients: [{ name: "Эспрессо", qty: "1", unit: "шт" }, { name: "Сливки 10%", qty: "150", unit: "мл" }, { name: "ПФ Ванильный сахар", qty: "15", unit: "г" }, { name: "ПФ Апельсин. цедра", qty: "7", unit: "г" }],
+        garnish: [{ name: "Апельсиновый чипс", qty: "2", unit: "г" }] },
+      { id: 39, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Латте медовик", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Эспрессо допио", qty: "1", unit: "шт" }, { name: "Молоко", qty: "200", unit: "мл" }, { name: "Сливки 10%", qty: "80", unit: "мл" }, { name: "Мед гречишный", qty: "25", unit: "г" }, { name: "ПФ Ванильный сахар", qty: "7", unit: "г" }],
+        garnish: [{ name: "Крошка медовика", qty: "5", unit: "г" }, { name: "Сота из глазури", qty: "1", unit: "шт" }] },
+      { id: 40, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Матча тирамису", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Миндальное молоко", qty: "60", unit: "мл" }, { name: "Сливки 10%", qty: "100", unit: "мл" }, { name: "ПФ Матча шот", qty: "1", unit: "шт" }, { name: "Сироп Амаретто", qty: "10", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "5", unit: "мл" }],
+        garnish: [{ name: "Сливки 20%", qty: "40", unit: "г" }, { name: "Сырная основа", qty: "7", unit: "г" }, { name: "Матча", qty: "0,3", unit: "г" }, { name: "Савоярди", qty: "1", unit: "шт" }] },
+      { id: 41, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Латте черничное печенье", method: "Основа в питчер", glass: "Олд Фешн 355 мл",
+        ingredients: [{ name: "Эспрессо", qty: "1", unit: "шт" }, { name: "Молоко", qty: "130", unit: "мл" }, { name: "Сливки 10%", qty: "130", unit: "мл" }, { name: "ТАРО", qty: "15", unit: "г" }, { name: "Черничный топпинг", qty: "15", unit: "мл" }],
+        garnish: [{ name: "ТАРО", qty: "0,5", unit: "г" }] },
+      { id: 42, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Айс-матча черника", method: "Основа в бокал + лед", glass: "Хайбол 370мл \"Пульс\"",
+        ingredients: [{ name: "ТАРО", qty: "15", unit: "г" }, { name: "Вода горячая", qty: "25", unit: "мл" }, { name: "Черничный топпинг", qty: "20", unit: "г" }, { name: "Молоко", qty: "120", unit: "мл" }, { name: "Вода горячая (на основу)", qty: "10", unit: "мл" }, { name: "Матча (на основу)", qty: "2", unit: "г" }, { name: "Сливки 20% (на основу)", qty: "30", unit: "мл" }],
+        garnish: [{ name: "Матча", qty: "0,1", unit: "г" }] },
+      { id: 43, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Латте тирамису", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Молоко миндальное", qty: "80", unit: "мл" }, { name: "Сливки 10%", qty: "120", unit: "мл" }, { name: "Эспрессо", qty: "1", unit: "шт" }, { name: "Сироп амаретто", qty: "15", unit: "г" }, { name: "Сахарный сироп", qty: "10", unit: "г" }],
+        garnish: [{ name: "Сливки 20%", qty: "40", unit: "г" }, { name: "Сырная основа", qty: "7", unit: "г" }, { name: "Какао золотой ярлык", qty: "1", unit: "г" }, { name: "Савоярди", qty: "1", unit: "шт" }] },
+      { id: 44, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Холодный Латте тирамису", method: "Основа в бокал + лед", glass: "Стакан рифлёный 450 мл",
+        ingredients: [{ name: "Миндальное молоко", qty: "120", unit: "мл" }, { name: "Сахарный сироп", qty: "15", unit: "мл" }, { name: "Эспрессо", qty: "1", unit: "шт" }],
+        garnish: [{ name: "Сливки 20%", qty: "40", unit: "г" }, { name: "Сырная основа", qty: "7", unit: "г" }, { name: "Какао золотой ярлык", qty: "2", unit: "г" }, { name: "Савоярди", qty: "1", unit: "шт" }] },
+      { id: 45, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Раф малина фисташка", method: "Основа в питчер", glass: "Barista Macarons 250 мл",
+        ingredients: [{ name: "Сливки 10%", qty: "150", unit: "мл" }, { name: "Паста фисташка", qty: "10", unit: "г" }, { name: "Малиновый сироп", qty: "10", unit: "мл" }, { name: "Эспрессо", qty: "1", unit: "шт" }],
+        garnish: [{ name: "Фисташка тертая", qty: "1", unit: "г" }] },
+      { id: 46, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Матча Латте (классик/кокос/миндаль)", method: "Основа в питчер", glass: "Magistro «Грани», 260 мл",
+        ingredients: [{ name: "ПФ Матча шот", qty: "1", unit: "шт" }, { name: "Молоко (на выбор)", qty: "200", unit: "мл" }, { name: "Сахарный сироп", qty: "10", unit: "мл" }],
+        garnish: [{ name: "Без украшения", qty: "0", unit: "г" }] },
+      { id: 47, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Айс Латте (классик/кокос/миндаль)", method: "Основа в бокал + лед", glass: "Magistro «Грани», 260 мл",
+        ingredients: [{ name: "Эспрессо", qty: "1", unit: "шт" }, { name: "Молоко", qty: "150", unit: "мл" }, { name: "Сахарный сироп", qty: "20", unit: "мл" }],
+        garnish: [{ name: "Без украшения", qty: "0", unit: "г" }] },
+      { id: 48, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Сырный раф с карамелью", method: "Основа в питчер", glass: "Barista Macarons 250 мл",
+        ingredients: [{ name: "Сырная основа", qty: "10", unit: "г" }, { name: "Сливки 10%", qty: "150", unit: "мл" }, { name: "Сироп соленая карамель", qty: "15", unit: "мл" }, { name: "Эспрессо", qty: "1", unit: "шт" }],
+        garnish: [{ name: "Какао золотой ярлык", qty: "0,5", unit: "г" }] },
+      { id: 49, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Латте XXL", method: "Основа в питчер", glass: "Чашка \"Barista Macarons\" 400 мл",
+        ingredients: [{ name: "Эспрессо допио", qty: "1", unit: "шт" }, { name: "Молоко", qty: "350", unit: "мл" }],
+        garnish: [{ name: "Без украшения", qty: "0", unit: "г" }] },
+      { id: 50, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Какао классический", method: "Основа в питчер", glass: "Чайная пара 200 мл",
+        ingredients: [{ name: "Горячий шоколад WTS", qty: "15", unit: "г" }, { name: "Молоко", qty: "180", unit: "мл" }],
+        garnish: [{ name: "Зефир гусь", qty: "1", unit: "шт" }, { name: "Какао золотой ярлык", qty: "0,5", unit: "г" }] },
+      { id: 51, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Эспрессо тоник (Малина/Маракуйя)", method: "Основа в бокал + лед", glass: "Бокал Алегра (Aska)",
+        ingredients: [{ name: "Тоник 1л", qty: "200", unit: "мл" }, { name: "Эспрессо", qty: "1", unit: "шт" }, { name: "Пюре (Малина/Маракуйя)", qty: "20", unit: "мл" }],
+        garnish: [{ name: "Лимон Полукруг (2 шт)", qty: "20", unit: "г" }] },
+      { id: 52, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Флэт Уайт", method: "Основа в питчер", glass: "Magistro «Грани», 260 мл",
+        ingredients: [{ name: "Эспрессо доппио", qty: "1", unit: "шт" }, { name: "Молоко", qty: "180", unit: "мл" }],
+        garnish: [{ name: "Без украшения", qty: "0", unit: "г" }] },
+      { id: 53, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Американо / Американо XXL", method: "Основа в чашку", glass: "Чайная 200 мл / 300 мл",
+        ingredients: [{ name: "Горячая вода (Американо 1 шот)", qty: "160", unit: "мл" }, { name: "Горячая вода (Американо XXL допио)", qty: "240", unit: "мл" }],
+        garnish: [{ name: "Без украшения", qty: "0", unit: "г" }] },
+      { id: 54, cat: "COFFEE", catLabel: "☕ Кофе и Матча", defaultName: "Капучино / Капучино XXL", method: "Основа в чашку", glass: "Чайная 200 мл / 300 мл",
+        ingredients: [{ name: "Молоко (Капучино 1 шот)", qty: "190", unit: "мл" }, { name: "Молоко (Капучино XXL допио)", qty: "270", unit: "мл" }],
+        garnish: [{ name: "Без украшения", qty: "0", unit: "г" }] },
+
+      // ================= 4. ЧАИ И ГЛИНТВЕЙНЫ (11) =================
+      { id: 55, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай ягодно-гранатовый", method: "Основа в чайник", glass: "Стеклянный чайник",
+        ingredients: [{ name: "ПФ Чай Каркаде", qty: "200", unit: "мл" }, { name: "Кордиал малина-гранат", qty: "50", unit: "мл" }, { name: "Сахарный сироп", qty: "50", unit: "мл" }, { name: "Сок вишневый", qty: "100", unit: "мл" }, { name: "Горячая вода", qty: "100", unit: "мл" }],
+        garnish: [{ name: "Вишня с/м", qty: "20", unit: "г" }, { name: "Розмарин", qty: "1", unit: "г" }] },
+      { id: 56, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай жасмин-манго-маракуйя", method: "Основа в чайник", glass: "Стеклянный чайник",
+        ingredients: [{ name: "ПФ Чай Жасмин", qty: "200", unit: "мл" }, { name: "Персиковый сок", qty: "100", unit: "мл" }, { name: "Кордиал манго-апельсин", qty: "60", unit: "мл" }, { name: "Пюре из Маракуйи", qty: "40", unit: "мл" }, { name: "Суперджус лимон", qty: "10", unit: "мл" }, { name: "Горячая вода", qty: "90", unit: "мл" }],
+        garnish: [{ name: "Тимьян", qty: "1", unit: "г" }, { name: "Апельсиновый чипс", qty: "6", unit: "г" }] },
+      { id: 57, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай ягодный бисквит", method: "Основа в чайник", glass: "Стеклянный чайник",
+        ingredients: [{ name: "ПФ Чай Липа", qty: "150", unit: "мл" }, { name: "Кордиал Земляничный", qty: "40", unit: "мл" }, { name: "Пюре из клубники", qty: "50", unit: "мл" }, { name: "ПФ Ванильный сахар", qty: "8", unit: "г" }, { name: "Горячая вода", qty: "260", unit: "мл" }],
+        garnish: [{ name: "Ежевика с/м", qty: "10", unit: "г" }, { name: "Смородина с/м", qty: "10", unit: "г" }, { name: "Клубника с/м", qty: "20", unit: "г" }] },
+      { id: 58, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай клубника-базилик", method: "Основа в кружку", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Пюре Клубника", qty: "40", unit: "мл" }, { name: "Кордиал Базилик", qty: "30", unit: "мл" }, { name: "ПФ Чай Каркаде", qty: "150", unit: "мл" }, { name: "Горячая вода", qty: "80", unit: "мл" }],
+        garnish: [{ name: "Базилик свежий", qty: "1", unit: "г" }, { name: "Клубника с/м", qty: "20", unit: "г" }] },
+      { id: 59, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай ананас-клубника", method: "Основа в чайник", glass: "Стеклянный чайник",
+        ingredients: [{ name: "ПФ Чай Жасмин", qty: "100", unit: "мл" }, { name: "Пюре Клубника", qty: "60", unit: "мл" }, { name: "Горячая вода", qty: "225", unit: "мл" }, { name: "Ананасовый сок", qty: "100", unit: "мл" }, { name: "Сахарный сироп", qty: "15", unit: "мл" }],
+        garnish: [{ name: "Тимьян", qty: "1", unit: "г" }, { name: "Клубника с/м", qty: "30", unit: "г" }] },
+      { id: 60, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай имбирный плед", method: "Основа в чайник", glass: "Стеклянный чайник",
+        ingredients: [{ name: "Кордиал Имбирь ФК", qty: "100", unit: "мл" }, { name: "Горячая вода", qty: "400", unit: "мл" }, { name: "Мед", qty: "15", unit: "г" }, { name: "Специи набор", qty: "1", unit: "шт" }],
+        garnish: [{ name: "Апельсин", qty: "30", unit: "г" }, { name: "Лимон", qty: "30", unit: "г" }] },
+      { id: 61, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай облепиховый", method: "Основа в чайник", glass: "Стеклянный чайник",
+        ingredients: [{ name: "Пюре из облепихи", qty: "115", unit: "мл" }, { name: "Мед", qty: "30", unit: "г" }, { name: "Горячая вода", qty: "385", unit: "мл" }],
+        garnish: [{ name: "Апельсин (полукруг)", qty: "30", unit: "г" }] },
+      { id: 62, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Глинтвейн Манго груша", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Белое кокт. вино", qty: "70", unit: "мл" }, { name: "Ананасовый сок", qty: "30", unit: "мл" }, { name: "Кордиал Манго-апельсин", qty: "30", unit: "мл" }, { name: "Сироп Сангрия ФК", qty: "10", unit: "мл" }, { name: "ПФ Сироп Лемонграсс", qty: "10", unit: "мл" }, { name: "Белуга Груша-Липа", qty: "20", unit: "мл" }, { name: "Вода", qty: "50", unit: "мл" }, { name: "Корица палочка", qty: "1", unit: "шт." }, { name: "Бадьян", qty: "1", unit: "шт." }],
+        garnish: [{ name: "Яблоко свежее", qty: "10", unit: "г" }] },
+      { id: 63, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Глинтвейн ягодно-гранатовый", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Белое кокт. вино", qty: "100", unit: "мл" }, { name: "Кордиал Малина-Гранат", qty: "40", unit: "мл" }, { name: "Настойка Вишня-Гранат", qty: "10", unit: "мл" }, { name: "Сироп Сангрия ФК", qty: "10", unit: "мл" }, { name: "Сок Вишневый", qty: "50", unit: "мл" }, { name: "Вода", qty: "30", unit: "мл" }, { name: "Набор специй", qty: "1", unit: "шт." }],
+        garnish: [{ name: "Смородина с/м", qty: "10", unit: "г" }] },
+      { id: 64, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Глинтвейн безалкогольный", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Сироп Сангрия ФК", qty: "20", unit: "мл" }, { name: "Сок Яблочный", qty: "70", unit: "мл" }, { name: "Виноградный сок", qty: "100", unit: "мл" }, { name: "Гарниш Смородина", qty: "2", unit: "г" }, { name: "Набор специй", qty: "1", unit: "шт." }, { name: "Вода горячая", qty: "30", unit: "мл" }],
+        garnish: [{ name: "Яблоко (3 слайса)", qty: "20", unit: "г" }, { name: "Апельсин (2 полукружка)", qty: "20", unit: "г" }] },
+      { id: 65, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Глинтвейн алкогольный", method: "Основа в питчер", glass: "Кружка 350 мл \"Grace\"",
+        ingredients: [{ name: "Сироп Сангрия ФК", qty: "20", unit: "мл" }, { name: "Сок Яблочный", qty: "70", unit: "мл" }, { name: "Красное кокт. вино", qty: "100", unit: "мл" }, { name: "Гарниш Смородина", qty: "2", unit: "г" }, { name: "Набор специй", qty: "1", unit: "шт." }, { name: "Вода горячая", qty: "30", unit: "мл" }],
+        garnish: [{ name: "Яблоко (3 слайса)", qty: "20", unit: "г" }, { name: "Апельсин (2 полукруга)", qty: "20", unit: "г" }] },
+
+      // ================= 5. ДЕТСКОЕ МЕНЮ (11) =================
+      { id: 66, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Розовый милкшейк", method: "Блендер", glass: "Хайбол 370 мл",
+        ingredients: [{ name: "Смесь Красный бархат", qty: "15", unit: "г" }, { name: "Молоко", qty: "130", unit: "мл" }, { name: "Мороженое", qty: "80", unit: "г" }],
+        garnish: [{ name: "Взбитые сливки", qty: "25", unit: "г" }, { name: "Посыпка сердечки", qty: "2", unit: "г" }, { name: "Смесь красный бархат + горячая вода", qty: "5 г + 10", unit: "мл" }] },
+      { id: 67, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Бабл лимонад персик-маракуйя", method: "Основа в бокал", glass: "Хайбол 370 мл",
+        ingredients: [{ name: "Пюре из маракуйи", qty: "20", unit: "мл" }, { name: "Сироп Персик", qty: "10", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "10", unit: "мл" }, { name: "ПФ Лаймовый джус", qty: "10", unit: "мл" }, { name: "Содовая", qty: "120", unit: "мл" }, { name: "Джус-боллы", qty: "30", unit: "г" }],
+        garnish: [{ name: "ПФ Ананасовая пена", qty: "20", unit: "г" }, { name: "Взрывная карамель", qty: "2", unit: "г" }, { name: "Изомальтовый леденец", qty: "1", unit: "шт" }] },
+      { id: 68, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Малиновый бабл гам", method: "Основа в бокал", glass: "Хайбол 370 мл",
+        ingredients: [{ name: "Сироп Бабл гам", qty: "10", unit: "мл" }, { name: "ПФ Морс малиновый", qty: "60", unit: "мл" }, { name: "Сироп Малина", qty: "10", unit: "мл" }, { name: "Содовая", qty: "120", unit: "мл" }],
+        garnish: [{ name: "Ананасовая пена", qty: "20", unit: "г" }, { name: "Изомальтовый леденец", qty: "1", unit: "шт" }, { name: "Взрывная карамель", qty: "2", unit: "г" }] },
+      { id: 69, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Ягодно-банановый шейк", method: "Блендер", glass: "Стакан Magistro «Грани», 260 мл",
+        ingredients: [{ name: "Банан", qty: "100", unit: "г" }, { name: "Клубника с/м", qty: "30", unit: "г" }, { name: "Черничный топпинг", qty: "20", unit: "г" }, { name: "Смородина с/м", qty: "20", unit: "г" }, { name: "Малиновый морс / Кокосовое молоко", qty: "120", unit: "мл" }],
+        garnish: [{ name: "Смородина с/м", qty: "5", unit: "г" }, { name: "Мята", qty: "1", unit: "г" }] },
+      { id: 70, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Персиковый бабл-шейк", method: "Блендер + джус-боллы", glass: "Стакан для молочных коктейлей",
+        ingredients: [{ name: "Персиковый сок", qty: "60", unit: "мл" }, { name: "Мороженое", qty: "60", unit: "г" }, { name: "Молоко", qty: "70", unit: "мл" }, { name: "Лёд", qty: "50", unit: "г" }, { name: "Персиковый сироп", qty: "5", unit: "мл" }, { name: "Джус-боллы", qty: "40", unit: "г" }],
+        garnish: [{ name: "Маршмеллоу цветной на шпажке", qty: "1", unit: "шт" }] },
+      { id: 71, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Бабл мохито", method: "Основа в бокал", glass: "Банка Сап",
+        ingredients: [{ name: "Джус-боллы", qty: "40", unit: "г" }, { name: "Кордиал Мохито", qty: "50", unit: "мл" }, { name: "Содовая", qty: "120", unit: "мл" }, { name: "Лёд", qty: "250", unit: "г" }],
+        garnish: [{ name: "Лайм", qty: "10", unit: "г" }, { name: "Мята (листок)", qty: "0,5", unit: "г" }, { name: "Джус-боллы", qty: "5", unit: "г" }] },
+      { id: 72, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Ёжик Фур-фур", method: "Блендер", glass: "Стакан «Ёжик»",
+        ingredients: [{ name: "Молоко", qty: "140", unit: "мл" }, { name: "Мороженое", qty: "80", unit: "г" }, { name: "Шоколадный топпинг", qty: "20", unit: "г" }],
+        garnish: [{ name: "Взбитые сливки", qty: "35", unit: "г" }, { name: "Готовый завтрак (уши)", qty: "2", unit: "г" }, { name: "Шоколадный топпинг", qty: "5", unit: "г" }, { name: "Вафельные трубочки", qty: "2", unit: "шт" }, { name: "Грибочки чоко-бой", qty: "2", unit: "шт" }] },
+      { id: 73, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Хорёк Антонио", method: "Блендер", glass: "Стакан «Хорёк»",
+        ingredients: [{ name: "Молоко", qty: "140", unit: "мл" }, { name: "Мороженое", qty: "80", unit: "г" }, { name: "Карамельный топпинг (на дно)", qty: "10", unit: "г" }],
+        garnish: [{ name: "Взбитые сливки", qty: "35", unit: "г" }, { name: "Печенье Oreo", qty: "2", unit: "шт" }, { name: "Карамельный топпинг", qty: "5", unit: "г" }] },
+      { id: 74, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Милкшейк Единорожек", method: "Блендер", glass: "Стакан «Единорог»",
+        ingredients: [{ name: "Молоко", qty: "120", unit: "мл" }, { name: "Мороженое", qty: "80", unit: "г" }, { name: "Клубничный топпинг", qty: "20", unit: "г" }],
+        garnish: [{ name: "Взбитые сливки", qty: "35", unit: "г" }, { name: "Мягкий зефир", qty: "7", unit: "г" }, { name: "Кондитер. посыпка", qty: "7", unit: "г" }, { name: "Мармеладная лента + Рог + Уши", qty: "3", unit: "шт" }] },
+      { id: 75, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Лиса Моцарелла", method: "Блендер", glass: "Стакан «Лиса»",
+        ingredients: [{ name: "Персиковый сок", qty: "150", unit: "мл" }, { name: "Мороженое", qty: "100", unit: "г" }],
+        garnish: [{ name: "Взбитые сливки", qty: "35", unit: "г" }, { name: "Зефир цветной", qty: "1", unit: "шт" }, { name: "Ванильный топпинг", qty: "10", unit: "г" }, { name: "Посыпка 0,5 г + трубочка", qty: "1", unit: "шт" }] },
+      { id: 76, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Милкшейк Классический", method: "Блендер", "glass": "Стакан для молочного коктейля",
+        ingredients: [{ name: "Молоко", qty: "100", unit: "мл" }, { name: "Мороженое", qty: "80", unit: "г" }, { name: "Топпинг в асс.", qty: "20", unit: "г" }],
+        garnish: [{ name: "Взбитые сливки", qty: "40", unit: "г" }, { name: "Топпинг в асс.", qty: "10", unit: "г" }] },
+
+      // ================= 6. НАСТОЙКИ, ПРЕБАТЧИ И СЕТЫ (21) =================
+      { id: 77, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Коровка", method: "Су-вид 3 часа, 65°C", glass: "Выход: 700 мл",
+        ingredients: [{ name: "Конфеты «Коровка»", qty: "250", unit: "г" }, { name: "Водка коктейльная", qty: "250", unit: "мл" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Сливки 10% (после)", qty: "200", unit: "мл" }, { name: "Бонификатор (после)", qty: "5", unit: "г" }],
+        garnish: [{ name: "Охлаждение в бутылке", qty: "3", unit: "часа" }] },
+      { id: 78, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Ананас-Ваниль на роме", method: "Су-вид 3 часа, 65°C", glass: "Выход: 400 мл",
+        ingredients: [{ name: "Ром коктейльный", qty: "250", unit: "мл" }, { name: "Ананас свежий очищенный", qty: "200", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Сахар", qty: "60", unit: "г" }, { name: "Душистый перец", qty: "1", unit: "г" }, { name: "Ванилин", qty: "0,5", unit: "г" }, { name: "Бонификатор", qty: "5", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 79, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Ежевика-Лайм на джине", method: "Су-вид 3 часа, 65°C", glass: "Выход: 375 мл",
+        ingredients: [{ name: "Джин коктейльный", qty: "250", unit: "мл" }, { name: "Ежевика с/м", qty: "200", unit: "г" }, { name: "Сахар", qty: "60", unit: "г" }, { name: "Цедра лайма", qty: "7", unit: "г" }, { name: "Ванилин", qty: "0,5", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Тимьян", qty: "0,5", unit: "г" }, { name: "Ароматизатор ежевика", qty: "5", unit: "кап" }, { name: "Бонификатор", qty: "5", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 80, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Клубника-Базилик на джине", method: "Су-вид 3 часа, 65°C", glass: "Выход: 375 мл",
+        ingredients: [{ name: "Клубника с/м", qty: "200", unit: "г" }, { name: "Джин коктейльный", qty: "250", unit: "мл" }, { name: "Базилик", qty: "8", unit: "г" }, { name: "Сахар", qty: "70", unit: "г" }, { name: "Ванилин", qty: "0,5", unit: "г" }, { name: "Цедра лимона", qty: "7", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Бонификатор", qty: "5", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 81, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Манго-Чили на текиле", method: "Су-вид 3 часа, 65°C", glass: "Выход: 375 мл",
+        ingredients: [{ name: "Манго с/м", qty: "200", unit: "г" }, { name: "Текила коктейльная", qty: "250", unit: "мл" }, { name: "Сахар", qty: "70", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Ванилин", qty: "0,5", unit: "г" }, { name: "Цедра лайма", qty: "7", unit: "г" }, { name: "Перец чили (без семян)", qty: "0,5", unit: "г" }, { name: "Бонификатор", qty: "5", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 82, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Вишня-Миндаль на бренди", method: "Су-вид 3 часа, 65°C", glass: "Выход: 400 мл",
+        ingredients: [{ name: "Вишня с/м", qty: "200", unit: "г" }, { name: "Бренди коктейльный", qty: "250", unit: "мл" }, { name: "Сироп амаретто", qty: "50", unit: "мл" }, { name: "Сахар", qty: "70", unit: "г" }, { name: "Ванилин", qty: "0,5", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Бонификатор", qty: "5", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 83, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Банан-Шоколад", method: "Су-вид 3 часа, 65°C", glass: "Выход: 1050 мл",
+        ingredients: [{ name: "Банан очищенный", qty: "400", unit: "г" }, { name: "Водка коктейльная", qty: "500", unit: "мл" }, { name: "Ароматизатор банан", qty: "5", unit: "кап" }, { name: "Шоколад молочный", qty: "200", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Бонификатор (после)", qty: "5", unit: "г" }, { name: "Сливки 10% (после)", qty: "400", unit: "мл" }],
+        garnish: [{ name: "Слайсы 5 мм, 2 шва пакет", qty: "3", unit: "ч охлаждения" }] },
+      { id: 84, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Клубника со сливками", method: "Су-вид 3 часа, 65°C", glass: "Выход: 950 мл",
+        ingredients: [{ name: "Водка «Царская ваниль»", qty: "500", unit: "мл" }, { name: "Клубника с/м", qty: "350", unit: "г" }, { name: "Сахар", qty: "170", unit: "г" }, { name: "Сливки 10% (после)", qty: "300", unit: "мл" }, { name: "Ароматизатор клубника", qty: "4", unit: "кап" }, { name: "Бонификатор", qty: "7", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 85, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Вишня-Гранат", method: "Су-вид 3 часа, 65°C", glass: "Выход: 2700 мл",
+        ingredients: [{ name: "Водка коктейльная", qty: "2000", unit: "мл" }, { name: "ПФ набор вишня-гранат", qty: "1", unit: "шт" }, { name: "Вода фильтрованная", qty: "200", unit: "мл" }, { name: "Бонификатор", qty: "15", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 86, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Лимончелло", method: "Су-вид 3 часа, 65°C", glass: "Выход: 1700 мл",
+        ingredients: [{ name: "ПФ на лимончелло", qty: "1", unit: "шт" }, { name: "Водка коктейльная", qty: "1000", unit: "мл" }, { name: "Суперджус (после)", qty: "300", unit: "мл" }, { name: "Вода фильтрованная (после)", qty: "200", unit: "мл" }, { name: "Бонификатор", qty: "10", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 3 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 87, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Крем Лимончелло", method: "Су-вид 3 часа, 65°C", glass: "Выход: 1860 мл",
+        ingredients: [{ name: "ПФ на лимончелло", qty: "1", unit: "шт" }, { name: "Водка коктейльная", qty: "1000", unit: "мл" }, { name: "Сливки 10% (после)", qty: "500", unit: "мл" }, { name: "Ванильный сахар", qty: "8", unit: "г" }, { name: "Вода фильтрованная", qty: "160", unit: "мл" }, { name: "Бонификатор", qty: "15", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 2 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 88, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Соленая карамель", method: "Смешивание + 24 часа в холод.", glass: "Выход: 550 мл",
+        ingredients: [{ name: "Кордиал соленая карамель ФК", qty: "300", unit: "мл" }, { name: "Водка коктейльная", qty: "250", unit: "мл" }, { name: "Бонификатор", qty: "6", unit: "г" }],
+        garnish: [{ name: "Выдержка в бутылке в холодильнике", qty: "24", unit: "часа" }] },
+      { id: 89, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Маракуйя", method: "Су-вид 3 часа, 65°C", glass: "Выход: 2500 мл",
+        ingredients: [{ name: "Пюре маракуйи для настойки", qty: "1000", unit: "г" }, { name: "Водка коктейльная", qty: "1500", unit: "мл" }, { name: "Сахар", qty: "215", unit: "г" }, { name: "Бонификатор", qty: "15", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 3 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 90, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Малина", method: "Су-вид 3 часа, 65°C", glass: "Выход: 700 мл",
+        ingredients: [{ name: "Малина с/м", qty: "250", unit: "г" }, { name: "Сахар", qty: "250", unit: "г" }, { name: "Водка коктейльная", qty: "500", unit: "мл" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Бонификатор", qty: "6", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 3 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 91, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Настойка Черная смородина", method: "Су-вид 3 часа, 65°C", glass: "Выход: 700 мл",
+        ingredients: [{ name: "Черная смородина с/м", qty: "250", unit: "г" }, { name: "Сахар", qty: "200", unit: "г" }, { name: "Водка коктейльная", qty: "500", unit: "мл" }, { name: "Цедра апельсина", qty: "6", unit: "г" }, { name: "Вода фильтрованная", qty: "100", unit: "мл" }, { name: "Бонификатор", qty: "6", unit: "г" }],
+        garnish: [{ name: "Фильтрация: сито + 3 слоя полотенца", qty: "3", unit: "ч охлаждения" }] },
+      { id: 92, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Пребатч Тай (на 5 коктейлей)", method: "Заготовка пребатч", glass: "Порция в шейкер: 120 мл",
+        ingredients: [{ name: "Кордиал манго-апельсин", qty: "150", unit: "мл" }, { name: "Лимончелло", qty: "200", unit: "мл" }, { name: "Адвокат", qty: "150", unit: "мл" }, { name: "Суперджус лимон", qty: "100", unit: "мл" }],
+        garnish: [{ name: "В шейкер со льдом", qty: "120", unit: "мл" }] },
+      { id: 93, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Пребатч Пасадена (на 5 коктейлей)", method: "Заготовка пребатч", glass: "Порция в шейкер: 115 мл",
+        ingredients: [{ name: "Пюре маракуйя", qty: "50", unit: "мл" }, { name: "Кордиал манго-апельсин", qty: "100", unit: "мл" }, { name: "Сироп дыня", qty: "50", unit: "мл" }, { name: "Джин коктейльный", qty: "250", unit: "мл" }, { name: "Ананасовый сок", qty: "75", unit: "мл" }, { name: "Суперджус лимон", qty: "50", unit: "мл" }],
+        garnish: [{ name: "В шейкер: пребатч 115 мл + пена", qty: "2", unit: "кап" }] },
+      { id: 94, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "ПФ Пребатч на Лонг Айленд", method: "Заготовка пребатч", glass: "Порция в шейкер: 100 мл",
+        ingredients: [{ name: "Водка коктейльная", qty: "160", unit: "мл" }, { name: "Ром коктейльный", qty: "150", unit: "мл" }, { name: "Джин коктейльный", qty: "150", unit: "мл" }, { name: "Текила коктейльная", qty: "150", unit: "мл" }, { name: "Ликер трипл сек", qty: "150", unit: "мл" }, { name: "Суперджус лимон", qty: "120", unit: "мл" }, { name: "ПФ Сахарный сироп", qty: "120", unit: "мл" }],
+        garnish: [{ name: "В шейкер со льдом", qty: "100", unit: "мл" }] },
+      { id: 95, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "Сет «Экзотика и классика» (5 шт по 50 мл)", method: "Подача в шотах по 50 мл", glass: "5 шотов по 50 мл",
+        ingredients: [{ name: "Маракуйя", qty: "50", unit: "мл" }, { name: "Лимончелло", qty: "50", unit: "мл" }, { name: "Настойка малина", qty: "50", unit: "мл" }, { name: "Вишня-гранат", qty: "50", unit: "мл" }, { name: "Черная смородина", qty: "50", unit: "мл" }],
+        garnish: [{ name: "5 шотов по 50 мл", qty: "5", unit: "шт" }] },
+      { id: 96, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "Сет «Дольче сет» (5 шт по 50 мл)", method: "Подача в шотах по 50 мл", glass: "5 шотов по 50 мл",
+        ingredients: [{ name: "Крем лимончелло", qty: "50", unit: "мл" }, { name: "Клубника со сливками", qty: "50", unit: "мл" }, { name: "Соленая карамель", qty: "50", unit: "мл" }, { name: "Банан шоколад", qty: "50", unit: "мл" }, { name: "Коровка", qty: "50", unit: "мл" }],
+        garnish: [{ name: "5 сливочных/сладких шотов по 50 мл", qty: "5", unit: "шт" }] },
+      { id: 97, cat: "PREP", catLabel: "🧪 Настойки и Сеты", defaultName: "Сет «Континентальный» (5 шт по 50 мл)", method: "Подача в шотах по 50 мл", glass: "5 шотов по 50 мл",
+        ingredients: [{ name: "Манго-чили на текиле", qty: "50", unit: "мл" }, { name: "Ананас-ваниль на роме", qty: "50", unit: "мл" }, { name: "Вишня-миндаль на бренди", qty: "50", unit: "мл" }, { name: "Ежевика-лайм на джине", qty: "50", unit: "мл" }, { name: "Клубника базилик на джине", qty: "50", unit: "мл" }],
+        garnish: [{ name: "5 шотов по 50 мл", qty: "5", unit: "шт" }] }
+    ];
+
+    if (localStorage.getItem('ttk_data_version') !== DATA_VERSION) {
+      localStorage.removeItem('ttk_custom_names');
+      localStorage.setItem('ttk_data_version', DATA_VERSION);
+    }
+
+    let bartenderName = localStorage.getItem('ttk_bartender_name') || '';
+    let customNames = JSON.parse(localStorage.getItem('ttk_custom_names') || '{}');
+    let examProgress = JSON.parse(localStorage.getItem('ttk_exam_progress') || '{}');
+    let weakItems = JSON.parse(localStorage.getItem('ttk_weak_items') || '[]');
+    let currentMode = 'exam';
+    let practiceCategory = 'ALL';
+    let quizFilter = 'all';
+
+    let activeExam = null;
+    let examTimerId = null;
+    let questionDeadlineMs = 0;
+    let timeLeftSec = QUESTION_TIME_SEC;
+
+    let currentPracticeQ = null;
+    let fcIndex = 0;
+    let fcFlipped = false;
+    let builderCocktail = null;
+    let focusedBuilderInputId = null;
+    let renameTargetId = null;
+
+    // Универсальная синхронизация с Google Таблицей (и для GitHub Pages, и для Apps Script)
+    function syncWithGoogleSheet() {
+      const ind = document.getElementById('sync-indicator');
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        if (ind) ind.textContent = '🔄';
+        google.script.run.withSuccessHandler(function(sheetItems) {
+          if (sheetItems && Array.isArray(sheetItems) && sheetItems.length > 0) {
+            allItems = sheetItems;
+            document.getElementById('total-ttk-count').textContent = allItems.length;
+          }
+          if (ind) ind.textContent = '☁️';
+          renderAll();
+        }).getItemsFromSheetIfAvailable();
+      } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
+        if (ind) ind.textContent = '🔄';
+        const url = EXTERNAL_API_URL.trim() + (EXTERNAL_API_URL.includes('?') ? '&' : '?') + 'action=getInitData';
+        fetch(url)
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.items && Array.isArray(data.items) && data.items.length > 0) {
+              allItems = data.items;
+              document.getElementById('total-ttk-count').textContent = allItems.length;
+            }
+            if (data && data.customNames) {
+              Object.keys(data.customNames).forEach(k => {
+                if (!String(data.customNames[k]).startsWith('№')) customNames[k] = data.customNames[k];
+              });
+              localStorage.setItem('ttk_custom_names', JSON.stringify(customNames));
+            }
+            if (ind) ind.textContent = '☁️';
+            renderAll();
+          })
+          .catch(() => {
+            if (ind) ind.textContent = '';
+          });
+      }
+    }
+
+    // Анти-чит: фиксируем сворачивание вкладки или переключение приложения во время экзамена
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && isExamInProgress()) {
+        activeExam.tabSwitches = (activeExam.tabSwitches || 0) + 1;
+        showToast(`⚠️ Зафиксировано сворачивание окна (${activeExam.tabSwitches})! Это отразится в отчете.`);
+      }
+    });
+
+    function showToast(msg) {
+      const el = document.getElementById('toast-alert');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+    }
+
+    function isExamInProgress() {
+      return activeExam !== null && activeExam.index < activeExam.queue.length;
+    }
+
+    function recordWeakItem(id) {
+      if (!weakItems.includes(id)) {
+        weakItems.push(id);
+        localStorage.setItem('ttk_weak_items', JSON.stringify(weakItems));
+        updateWeakBadge();
+      }
+    }
+
+    function resolveWeakItem(id) {
+      if (weakItems.includes(id)) {
+        weakItems = weakItems.filter(x => x !== id);
+        localStorage.setItem('ttk_weak_items', JSON.stringify(weakItems));
+        updateWeakBadge();
+      }
+    }
+
+    function updateWeakBadge() {
+      const b = document.getElementById('weak-count-badge');
+      if (b) b.textContent = weakItems.length;
+    }
+
+    function forceCleanNames() {
+      if (confirm('Вернуть всем позициям названия по умолчанию?')) {
+        customNames = {};
+        localStorage.removeItem('ttk_custom_names');
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.clearSharedCustomNames();
+        } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
+          fetch(EXTERNAL_API_URL.trim(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'clearCustomNames' })
+          }).catch(() => {});
+        }
+        renderAll();
+      }
+    }
+
+    function getName(c) {
+      const saved = customNames[c.id];
+      if (saved && !String(saved).startsWith('№')) return saved;
+      return c.defaultName;
+    }
+
+    function formatGarnish(c) { return c.garnish.map(g => `${g.name} — ${g.qty} ${g.unit}`).join(' + '); }
+    function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+    // ================= ЧЕСТНЫЙ ТАЙМЕР НА БАЗЕ Date.now() =================
+    function stopQuestionTimer() {
+      if (examTimerId) {
+        clearInterval(examTimerId);
+        examTimerId = null;
+      }
+    }
+
+    function startQuestionTimer() {
+      stopQuestionTimer();
+      questionDeadlineMs = Date.now() + (QUESTION_TIME_SEC * 1000);
+      timeLeftSec = QUESTION_TIME_SEC;
+      updateTimerUI();
+
+      examTimerId = setInterval(() => {
+        const remainingMs = questionDeadlineMs - Date.now();
+        timeLeftSec = Math.max(0, Math.ceil(remainingMs / 1000));
+        updateTimerUI();
+        if (remainingMs <= 0) {
+          stopQuestionTimer();
+          handleExamTimeout();
+        }
+      }, 250);
+    }
+
+    function updateTimerUI() {
+      const badge = document.getElementById('exam-timer-badge');
+      const bar = document.getElementById('exam-timer-bar');
+      if (!badge || !bar) return;
+
+      badge.textContent = `⏱ ${timeLeftSec} сек`;
+      const pct = Math.max(0, Math.round((timeLeftSec / QUESTION_TIME_SEC) * 100));
+      bar.style.width = `${pct}%`;
+
+      if (timeLeftSec <= 5) {
+        badge.className = "px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-xs animate-pulse";
+        bar.className = "h-full bg-rose-500 transition-all duration-200";
+      } else if (timeLeftSec <= 10) {
+        badge.className = "px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold text-xs";
+        bar.className = "h-full bg-amber-400 transition-all duration-200";
+      } else {
+        badge.className = "px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs";
+        bar.className = "h-full bg-emerald-500 transition-all duration-200";
+      }
+    }
+
+    function handleExamTimeout() {
+      if (!activeExam || activeExam.index >= activeExam.queue.length) return;
+      const q = activeExam.queue[activeExam.index];
+      const c = q.cocktail;
+      recordWeakItem(c.id);
+      activeExam.mistakes.push(`${getName(c)} [${q.shortLabel}: ⏰ Время вышло (${QUESTION_TIME_SEC} сек)! Правильно: "${q.correctAnswer}"]`);
+      activeExam.index += 1;
+      renderExamView();
+    }
+
+    function updateHeaderUI() {
+      document.getElementById('bartender-name-badge').textContent = bartenderName ? bartenderName : 'Указать имя';
+      let passed = 0;
+      MAIN_STATIONS.forEach(k => {
+        if (examProgress[k] && examProgress[k].pct >= PASS_THRESHOLD) passed++;
+      });
+      const badge = document.getElementById('header-progress-badge');
+      badge.textContent = passed === 6 ? '🏆 Допущен (6/6)' : `Зачетка: ${passed} / 6`;
+      badge.className = passed === 6 ? 'text-sm font-extrabold text-amber-400' : 'text-sm font-extrabold text-emerald-400';
+
+      const locked = isExamInProgress();
+      ['practice', 'builder', 'flashcards', 'list'].forEach(m => {
+        const tab = document.getElementById(`tab-${m}`);
+        if (tab) tab.classList.toggle('tab-locked', locked);
+      });
+      updateWeakBadge();
+    }
+
+    function openUserModal() {
+      if (isExamInProgress()) {
+        showToast('🔒 Нельзя менять имя во время сдачи билета!');
+        return;
+      }
+      document.getElementById('user-name-input').value = bartenderName;
+      document.getElementById('user-modal').classList.remove('hidden');
+    }
+
+    function saveUserName() {
+      const val = document.getElementById('user-name-input').value.trim();
+      if (!val) return alert('Введи свое имя!');
+      bartenderName = val;
+      localStorage.setItem('ttk_bartender_name', bartenderName);
+      document.getElementById('user-modal').classList.add('hidden');
+      updateHeaderUI();
+    }
+
+    function setMode(mode) {
+      if (isExamInProgress() && mode !== 'exam') {
+        showToast('🔒 Идет экзамен! Переключение вкладок заблокировано до конца билета.');
+        return;
+      }
+      if (mode !== 'exam') stopQuestionTimer();
+      currentMode = mode;
+      ['exam', 'practice', 'builder', 'flashcards', 'list'].forEach(m => {
+        document.getElementById(`view-${m}`).classList.toggle('hidden', m !== mode);
+        document.getElementById(`tab-${m}`).className = m === mode
+          ? "py-2 px-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition"
+          : "py-2 px-1 rounded-lg text-slate-300 hover:text-white transition";
+      });
+      document.getElementById('shared-category-bar').classList.toggle('hidden', mode === 'exam');
+      renderAll();
+    }
+
+    function setPracticeCategory(cat) {
+      if (cat === 'WEAK' && weakItems.length === 0) {
+        showToast('🎉 У тебя пока нет записанных ошибок! Пройди тест или тренировку.');
+        return;
+      }
+      practiceCategory = cat;
+      ['ALL', 'WEAK', 'ALC', 'NA', 'COFFEE', 'TEA', 'KIDS', 'PREP'].forEach(c => {
+        const btn = document.getElementById(`pcat-${c}`);
+        if (!btn) return;
+        if (c === cat) {
+          btn.className = "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition";
+        } else if (c === 'WEAK') {
+          btn.className = "px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40";
+        } else {
+          btn.className = "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
+        }
+      });
+      fcIndex = 0;
+      fcFlipped = false;
+      builderCocktail = null;
+      generatePracticeQuestion();
+      renderAll();
+    }
+
+    function getPracticePool() {
+      if (practiceCategory === 'ALL') return allItems;
+      if (practiceCategory === 'WEAK') {
+        const wPool = allItems.filter(x => weakItems.includes(x.id));
+        return wPool.length > 0 ? wPool : allItems;
+      }
+      return allItems.filter(x => x.cat === practiceCategory);
+    }
+
+    // УМНЫЙ ПОДБОР ОТВЕТОВ СТРОГО ВНУТРИ КАТЕГОРИИ НАПИТКА
+    function getCategoryDistractors(item, extractorFn, count = 3) {
+      const correctVal = extractorFn(item);
+      const sameCatItems = allItems.filter(x => x.cat === item.cat);
+      let pool = [...new Set(sameCatItems.map(extractorFn))].filter(v => v !== correctVal);
+
+      if (pool.length < count) {
+        const fallbackMap = {
+          KIDS: ['COFFEE', 'NA'],
+          TEA: ['COFFEE', 'NA'],
+          COFFEE: ['KIDS', 'TEA'],
+          NA: ['ALC', 'KIDS'],
+          ALC: ['NA'],
+          PREP: ['ALC']
+        };
+        const extras = fallbackMap[item.cat] || [];
+        const fallbackItems = allItems.filter(x => extras.includes(x.cat));
+        const extraVals = [...new Set(fallbackItems.map(extractorFn))].filter(v => v !== correctVal && !pool.includes(v));
+        pool = pool.concat(shuffle(extraVals));
+      }
+      return shuffle(pool).slice(0, count);
+    }
+
+    function buildQuestionForItem(c, filterType) {
+      let types = ['qty', 'glass', 'garnish'];
+      if (filterType && filterType !== 'all') types = [filterType];
+      const qType = types[Math.floor(Math.random() * types.length)];
+
+      let questionText = '';
+      let shortLabel = '';
+      let subText = `${c.catLabel} • ${c.method}`;
+      let correctAnswer = '';
+      let options = [];
+
+      if (qType === 'qty') {
+        const ing = c.ingredients[Math.floor(Math.random() * c.ingredients.length)];
+        questionText = `Какая точная закладка ингредиента «${ing.name}»?`;
+        shortLabel = ing.name;
+        correctAnswer = `${ing.qty} ${ing.unit}`;
+        const num = parseFloat(ing.qty.replace(',', '.'));
+        let cand = new Set();
+
+        allItems
+          .filter(x => x.cat === c.cat)
+          .forEach(x => x.ingredients.forEach(i => {
+            if (i.unit === ing.unit) cand.add(`${i.qty} ${i.unit}`);
+          }));
+
+        if (!isNaN(num)) {
+          const steps = num >= 100 ? [-50, -30, -20, 20, 30, 50] : [-10, -5, 5, 10, 15, 20];
+          steps.forEach(delta => {
+            if (num + delta > 0) cand.add(`${num + delta} ${ing.unit}`);
+          });
+        }
+        const defaults = ['5 мл', '10 мл', '15 мл', '20 мл', '25 мл', '30 мл', '40 мл', '50 мл', '60 мл', '80 мл', '100 мл', '120 мл', '150 мл', '200 мл'];
+        const wrongs = shuffle([...cand, ...defaults].filter(x => x !== correctAnswer));
+        options = shuffle([correctAnswer, ...wrongs.slice(0, 3)]);
+      } else if (qType === 'glass') {
+        questionText = c.cat === 'PREP' ? `Какой выход или порция у этой заготовки/сета?` : `В какой посуде подается этот напиток?`;
+        shortLabel = `Посуда/Выход`;
+        correctAnswer = c.glass;
+        const wrongs = getCategoryDistractors(c, item => item.glass, 3);
+        options = shuffle([correctAnswer, ...wrongs]);
+      } else {
+        questionText = c.cat === 'PREP' ? `Какая особенность технологии / подачи?` : `Какое украшение (гарниш) идет в этот напиток?`;
+        shortLabel = `Украшение`;
+        correctAnswer = formatGarnish(c);
+        const wrongs = getCategoryDistractors(c, item => formatGarnish(item), 3);
+        options = shuffle([correctAnswer, ...wrongs]);
+      }
+
+      return { cocktail: c, questionText, shortLabel, subText, correctAnswer, options, answered: false };
+    }
+
+    // ================= РЕЖИМ 1: ЗАЧЕТКА И СЛЕПОЙ ЭКЗАМЕН С ТАЙМЕРОМ =================
+    function startCategoryExam(catCode) {
+      if (!bartenderName) {
+        openUserModal();
+        return;
+      }
+      const meta = CATEGORY_META[catCode];
+      const pool = catCode === 'ALL' ? allItems : allItems.filter(x => x.cat === catCode);
+
+      let itemsQueue = shuffle(pool);
+      while (itemsQueue.length < meta.examQuestions) {
+        itemsQueue = itemsQueue.concat(shuffle(pool));
+      }
+      itemsQueue = itemsQueue.slice(0, meta.examQuestions);
+
+      const questionsQueue = itemsQueue.map((item, idx) => {
+        const cycleTypes = ['qty', 'qty', 'glass', 'garnish'];
+        return buildQuestionForItem(item, cycleTypes[idx % cycleTypes.length]);
+      });
+
+      activeExam = {
+        catCode: catCode,
+        title: meta.title,
+        queue: questionsQueue,
+        index: 0,
+        correct: 0,
+        mistakes: [],
+        tabSwitches: 0
+      };
+      updateHeaderUI();
+      renderExamView();
+    }
+
+    function cancelActiveExam() {
+      if (confirm('Досрочно прервать экзамен? Билет будет закрыт и сброшен.')) {
+        stopQuestionTimer();
+        activeExam = null;
+        updateHeaderUI();
+        renderExamView();
+      }
+    }
+
+    function answerBlindExam(optIdx) {
+      if (!activeExam) return;
+      stopQuestionTimer();
+      const q = activeExam.queue[activeExam.index];
+      const chosen = q.options[optIdx];
+      const c = q.cocktail;
+
+      if (chosen === q.correctAnswer) {
+        activeExam.correct += 1;
+      } else {
+        recordWeakItem(c.id);
+        activeExam.mistakes.push(`${getName(c)} [${q.shortLabel}: ответил "${chosen}" вместо "${q.correctAnswer}"]`);
+      }
+
+      activeExam.index += 1;
+      updateHeaderUI();
+      renderExamView();
+    }
+
+    function sendResultToServer(payload, onSuccess, onError) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onSuccess)
+          .withFailureHandler(onError)
+          .saveQuizResult(payload);
+      } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
+        fetch(EXTERNAL_API_URL.trim(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'saveQuizResult', payload: payload })
+        })
+          .then(r => r.json())
+          .then(onSuccess)
+          .catch(onError);
+      } else {
+        onSuccess({ localOnly: true });
+      }
+    }
+
+    function renderExamView() {
+      const container = document.getElementById('exam-container');
+
+      if (!activeExam) {
+        stopQuestionTimer();
+        let passedCount = 0;
+        MAIN_STATIONS.forEach(k => {
+          if (examProgress[k] && examProgress[k].pct >= PASS_THRESHOLD) passedCount++;
+        });
+
+        const cardsHTML = Object.keys(CATEGORY_META).map(key => {
+          const m = CATEGORY_META[key];
+          const rec = examProgress[key];
+          let statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300 text-xs font-semibold">⏳ Не сдавал</span>`;
+          let borderClass = "border-slate-700 hover:border-slate-500";
+
+          if (rec) {
+            if (rec.pct >= PASS_THRESHOLD) {
+              statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-xs font-extrabold">✅ Сдано (${rec.pct}%)</span>`;
+              borderClass = "border-emerald-500/50 bg-emerald-950/15";
+            } else {
+              statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-500/50 text-rose-300 text-xs font-extrabold">❌ Пересдача (${rec.pct}%)</span>`;
+              borderClass = "border-rose-500/50 bg-rose-950/15";
+            }
+          }
+
+          return `
+            <div class="bg-slate-800/90 border ${borderClass} rounded-2xl p-4 space-y-3 shadow">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <h3 class="text-sm font-bold text-white">${m.title}</h3>
+                  <p class="text-xs text-slate-400 mt-0.5">${m.desc}</p>
+                </div>
+                <div class="shrink-0">${statusBadge}</div>
+              </div>
+              <div class="flex items-center justify-between pt-1 border-t border-slate-700/60 text-xs">
+                <span class="text-slate-400">Билет: <b>${m.examQuestions} вопр.</b> • ⏱ по ${QUESTION_TIME_SEC} сек</span>
+                <button onclick="startCategoryExam('${key}')" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition shadow">
+                  ${rec ? 'Пересдать ➡️' : 'Сдать зачет ➡️'}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const weakBanner = weakItems.length > 0 ? `
+          <div class="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-2">
+            <div>
+              <div class="text-xs font-bold text-rose-300">🔥 Слабые места: ${weakItems.length} поз.</div>
+              <div class="text-[11px] text-slate-300">Отработай позиции, в которых недавно ошибался.</div>
+            </div>
+            <button onclick="setMode('practice'); setPracticeCategory('WEAK');" class="px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs shrink-0">Отработать</button>
+          </div>
+        ` : '';
+
+        container.innerHTML = `
+          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[11px] uppercase tracking-wider text-amber-400 font-bold">Личная зачетка бармена</span>
+                <h2 class="text-base font-bold text-white">${bartenderName || 'Бармен'} — закрыто ${passedCount} из 6 станций</h2>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-bold border border-slate-700">⏱ ${QUESTION_TIME_SEC} сек/вопр.</span>
+            </div>
+            <p class="text-xs text-slate-400">Во время сдачи билета переключение вкладок <b>блокируется</b>, на каждый ответ дается <b>${QUESTION_TIME_SEC} секунд</b>. Результат автоматически заносится в Google Таблицу.</p>
+          </div>
+          ${weakBanner}
+          <div class="space-y-2.5">${cardsHTML}</div>
+        `;
+        return;
+      }
+
+      if (activeExam.index >= activeExam.queue.length) {
+        stopQuestionTimer();
+        const total = activeExam.queue.length;
+        const correct = activeExam.correct;
+        const pct = Math.round((correct / total) * 100);
+        const passed = pct >= PASS_THRESHOLD;
+
+        if (activeExam.tabSwitches > 0) {
+          activeExam.mistakes.unshift(`⚠️ ВНИМАНИЕ: Сворачивал окно / переключал вкладку во время экзамена (${activeExam.tabSwitches} раз)`);
+        }
+
+        examProgress[activeExam.catCode] = { pct, date: new Date().toLocaleDateString('ru-RU') };
+        localStorage.setItem('ttk_exam_progress', JSON.stringify(examProgress));
+        updateHeaderUI();
+
+        const mistakesHTML = activeExam.mistakes.length > 0
+          ? `<ul class="list-disc pl-4 space-y-1 text-xs text-rose-200">${activeExam.mistakes.map(m => `<li>${m}</li>`).join('')}</ul>`
+          : `<p class="text-xs text-emerald-300 font-semibold">Ни одной ошибки! 100% знание ТТК 🔥</p>`;
+
+        container.innerHTML = `
+          <div class="bg-slate-800/90 border-2 ${passed ? 'border-emerald-500' : 'border-rose-500'} rounded-2xl p-5 space-y-4 shadow-xl">
+            <div class="text-center space-y-1.5 border-b border-slate-700 pb-3">
+              <div class="text-xs uppercase font-bold ${passed ? 'text-emerald-400' : 'text-rose-400'}">
+                ${passed ? '✅ ЗАЧЕТ УСПЕШНО СДАН!' : `❌ НА ПЕРЕСДАЧУ (НУЖНО МИНИМУМ ${PASS_THRESHOLD}%)`}
+              </div>
+              <h2 class="text-2xl font-extrabold text-white">${pct}% (${correct} из ${total})</h2>
+              <p class="text-xs text-slate-300 font-medium">${activeExam.title} • Бармен: <b>${bartenderName}</b></p>
+              <div id="exam-sheet-status" class="text-xs font-semibold text-amber-300 pt-1">
+                ⏳ Записываем результат в Google Таблицу...
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 space-y-1.5">
+              <div class="text-xs font-bold text-slate-300">Разбор ошибок по билету:</div>
+              ${mistakesHTML}
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <button onclick="startCategoryExam('${activeExam.catCode}')" class="py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow">
+                Пройти еще раз 🔄
+              </button>
+              <button onclick="activeExam = null; updateHeaderUI(); renderExamView();" class="py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs transition">
+                Вернуться в Зачетку 🎓
+              </button>
+            </div>
+          </div>
+        `;
+
+        sendResultToServer(
+          {
+            bartenderName: bartenderName,
+            categoryCode: activeExam.catCode,
+            modeName: `Экзамен: ${activeExam.title}`,
+            correct: correct,
+            total: total,
+            percent: pct,
+            mistakes: activeExam.mistakes
+          },
+          function(res) {
+            const st = document.getElementById('exam-sheet-status');
+            if (!st) return;
+            if (res && res.localOnly) {
+              st.textContent = "ℹ️ Не указан EXTERNAL_API_URL (результат сохранен только на устройстве)";
+            } else if (res && res.success) {
+              st.className = "text-xs font-semibold text-emerald-400 pt-1";
+              st.textContent = `✅ Записано в «Результаты» и «Табель аттестации» (${res.date})`;
+            } else {
+              st.className = "text-xs font-semibold text-rose-400 pt-1";
+              st.textContent = `⚠️ Ошибка записи: ${res ? res.error : ''}`;
+            }
+          },
+          function() {
+            const st = document.getElementById('exam-sheet-status');
+            if (st) {
+              st.className = "text-xs font-semibold text-rose-400 pt-1";
+              st.textContent = `⚠️ Ошибка сети при отправке в таблицу`;
+            }
+          }
+        );
+        return;
+      }
+
+      const q = activeExam.queue[activeExam.index];
+      const c = q.cocktail;
+      const total = activeExam.queue.length;
+      const progressPct = Math.round((activeExam.index / total) * 100);
+
+      const optionsHTML = q.options.map((opt, idx) => `
+        <button onclick="answerBlindExam(${idx})" class="w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/90 hover:bg-amber-500/20 hover:border-amber-400 border border-slate-700 text-sm font-medium transition flex items-center justify-between">
+          <span>${opt}</span>
+          <span class="text-xs text-slate-500">➡️</span>
+        </button>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-4 shadow-lg">
+          <div class="flex items-center justify-between text-xs text-slate-400 border-b border-slate-700/80 pb-2.5">
+            <span class="font-bold text-amber-400">🔒 ${activeExam.title}</span>
+            <div class="flex items-center gap-2">
+              <span id="exam-timer-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs">⏱ ${QUESTION_TIME_SEC} сек</span>
+              <button onclick="cancelActiveExam()" title="Прервать экзамен" class="text-slate-400 hover:text-rose-400 px-1">✖</button>
+            </div>
+          </div>
+
+          <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+            <div id="exam-timer-bar" class="h-full bg-emerald-500 transition-all duration-200" style="width: 100%"></div>
+          </div>
+
+          <div class="flex justify-between text-[11px] text-slate-400">
+            <span>Слепой экзамен (вкладки заблокированы)</span>
+            <span class="font-bold text-white">Вопрос ${activeExam.index + 1} из ${total} (${progressPct}%)</span>
+          </div>
+
+          <div>
+            <h2 class="text-base font-extrabold text-white">${getName(c)}</h2>
+            <p class="text-xs text-slate-400 mt-0.5">${q.subText}</p>
+          </div>
+
+          <p class="text-sm font-semibold text-slate-100">${q.questionText}</p>
+
+          <div class="space-y-2.5">${optionsHTML}</div>
+        </div>
+      `;
+
+      startQuestionTimer();
+    }
+
+    // ================= РЕЖИМ 2: ТРЕНИРОВКА С ПОДСКАЗКАМИ =================
+    function setQuizFilter(filter) {
+      quizFilter = filter;
+      ['all', 'qty', 'glass', 'garnish'].forEach(f => {
+        document.getElementById(`qf-${f}`).className = f === filter
+          ? "px-3 py-1 rounded-full bg-slate-700 text-amber-300 font-semibold border border-amber-500/40"
+          : "px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700";
+      });
+      generatePracticeQuestion();
+    }
+
+    function generatePracticeQuestion() {
+      const pool = getPracticePool();
+      const c = pool[Math.floor(Math.random() * pool.length)];
+      currentPracticeQ = buildQuestionForItem(c, quizFilter);
+      renderPracticeQuestion();
+    }
+
+    function renderPracticeQuestion() {
+      if (!currentPracticeQ) generatePracticeQuestion();
+      const c = currentPracticeQ.cocktail;
+      const container = document.getElementById('practice-container');
+      const optionsHTML = currentPracticeQ.options.map((opt, idx) => `
+        <button onclick="answerPractice(${idx})" id="pq-opt-${idx}" class="w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-700/80 border border-slate-700 text-sm font-medium transition flex items-center justify-between">
+          <span>${opt}</span>
+        </button>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="flex items-start justify-between gap-2 border-b border-slate-700/80 pb-3">
+          <div>
+            <span class="text-[11px] uppercase tracking-wider text-emerald-400 font-bold">Тренировка по категории (без таймера)</span>
+            <h2 class="text-base font-bold text-white mt-0.5">${getName(c)}</h2>
+            <p class="text-xs text-slate-400 mt-0.5">${currentPracticeQ.subText}</p>
+          </div>
+          <button onclick="openRenameModal(${c.id})" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-700/70 text-slate-300 shrink-0">✏️</button>
+        </div>
+        <p class="text-sm font-semibold text-slate-100">${currentPracticeQ.questionText}</p>
+        <div class="space-y-2.5">${optionsHTML}</div>
+        <div id="practice-feedback" class="hidden pt-2"></div>
+      `;
+    }
+
+    function answerPractice(idx) {
+      if (currentPracticeQ.answered) return;
+      currentPracticeQ.answered = true;
+      const c = currentPracticeQ.cocktail;
+      const chosen = currentPracticeQ.options[idx];
+      const isCorrect = chosen === currentPracticeQ.correctAnswer;
+
+      if (isCorrect) resolveWeakItem(c.id);
+      else recordWeakItem(c.id);
+
+      currentPracticeQ.options.forEach((opt, i) => {
+        const btn = document.getElementById(`pq-opt-${i}`);
+        if (opt === currentPracticeQ.correctAnswer) {
+          btn.className = "w-full text-left px-4 py-3.5 rounded-xl bg-emerald-950/90 border-2 border-emerald-500 text-emerald-200 text-sm font-bold flex items-center justify-between";
+          btn.innerHTML += `<span>✅</span>`;
+        } else if (i === idx && !isCorrect) {
+          btn.className = "w-full text-left px-4 py-3.5 rounded-xl bg-rose-950/90 border-2 border-rose-500 text-rose-200 text-sm font-semibold flex items-center justify-between";
+          btn.innerHTML += `<span>❌</span>`;
+        } else {
+          btn.className = "w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/40 border border-slate-800 text-slate-500 text-sm flex items-center justify-between";
+        }
+      });
+
+      const ingSummary = c.ingredients.map(i => `${i.name}: <b>${i.qty} ${i.unit}</b>`).join(' • ');
+      const feedback = document.getElementById('practice-feedback');
+      feedback.classList.remove('hidden');
+      feedback.innerHTML = `
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs space-y-1.5">
+          <div class="font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
+            ${isCorrect ? 'Отлично! Точно по ТТК.' : `Правильный ответ: ${currentPracticeQ.correctAnswer}`}
+          </div>
+          <div class="text-slate-300"><span class="text-slate-400">Состав:</span> ${ingSummary}</div>
+          <div class="text-slate-300"><span class="text-slate-400">Подача/Выход:</span> <b>${c.glass}</b> | <span class="text-slate-400">Декор:</span> <b>${formatGarnish(c)}</b></div>
+        </div>
+        <button onclick="generatePracticeQuestion()" class="mt-3 w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition shadow">
+          Следующий тренировочный вопрос ➡️
+        </button>
+      `;
+    }
+
+    // ================= РЕЖИМ 3: СБОРКА ТТК С БЫСТРЫМИ КНОПКАМИ =================
+    function initBuilder(itemId) {
+      const pool = getPracticePool();
+      if (itemId) builderCocktail = allItems.find(c => c.id === itemId);
+      else if (!builderCocktail) builderCocktail = pool[Math.floor(Math.random() * pool.length)];
+      renderBuilder();
+    }
+
+    function nextBuilderCocktail() {
+      const pool = getPracticePool();
+      builderCocktail = pool[Math.floor(Math.random() * pool.length)];
+      renderBuilder();
+    }
+
+    function fillQuickQty(val) {
+      if (!focusedBuilderInputId) focusedBuilderInputId = 'b-ing-0';
+      const inp = document.getElementById(focusedBuilderInputId);
+      if (inp && !inp.disabled) {
+        inp.value = val;
+        const curIdx = parseInt(focusedBuilderInputId.replace('b-ing-', ''), 10);
+        const nextInp = document.getElementById(`b-ing-${curIdx + 1}`);
+        if (nextInp) {
+          focusedBuilderInputId = `b-ing-${curIdx + 1}`;
+          nextInp.focus();
+        }
+      }
+    }
+
+    function renderBuilder() {
+      const c = builderCocktail;
+      focusedBuilderInputId = 'b-ing-0';
+      const sameCategoryItems = allItems.filter(x => x.cat === c.cat);
+      const container = document.getElementById('builder-container');
+      const allGlasses = [...new Set(sameCategoryItems.map(item => item.glass))];
+      const allGarnishes = [...new Set(sameCategoryItems.map(item => formatGarnish(item)))];
+
+      const quickValues = ['1', '2', '5', '10', '15', '20', '25', '30', '40', '50', '60', '70', '80', '100', '120', '150', '200'];
+      const quickBar = `
+        <div class="flex flex-wrap gap-1 pt-1">
+          ${quickValues.map(v => `<button type="button" onclick="fillQuickQty('${v}')" class="px-2 py-1 rounded-lg bg-slate-700/80 hover:bg-amber-500 hover:text-slate-950 text-[11px] font-bold text-slate-200 transition">${v}</button>`).join('')}
+        </div>
+      `;
+
+      const ingInputs = c.ingredients.map((ing, i) => `
+        <div class="flex items-center justify-between gap-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/80" id="b-row-${i}">
+          <span class="text-xs font-medium text-slate-200">${ing.name}</span>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <input type="text" inputmode="decimal" id="b-ing-${i}" onfocus="focusedBuilderInputId='b-ing-${i}'" placeholder="?" class="w-16 text-center bg-slate-800 border border-slate-600 rounded-lg py-1.5 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400" />
+            <span class="text-xs text-slate-400 w-10">${ing.unit}</span>
+          </div>
+        </div>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between gap-2 border-b border-slate-700 pb-3">
+          <div>
+            <span class="text-[11px] uppercase tracking-wider text-amber-400 font-bold">${c.catLabel}</span>
+            <h2 class="text-base font-bold text-white">${getName(c)}</h2>
+            <span class="text-xs text-slate-400">${c.method}</span>
+          </div>
+          <button onclick="nextBuilderCocktail()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs text-amber-300 font-semibold">Другой 🎲</button>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-xs text-slate-400 font-medium">1. Введи граммовки или нажимай быстрые кнопки:</label>
+          ${quickBar}
+          ${ingInputs}
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs text-slate-400 font-medium">2. Выбери посуду подачи / выход (${c.catLabel}):</label>
+          <select id="b-glass" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+            <option value="">— Выбрать —</option>
+            ${shuffle(allGlasses).map(g => `<option value="${g.replace(/"/g, '&quot;')}">${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs text-slate-400 font-medium">3. Выбери украшение / стандарт (${c.catLabel}):</label>
+          <select id="b-garnish" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+            <option value="">— Выбрать —</option>
+            ${shuffle(allGarnishes).map(g => `<option value="${g.replace(/"/g, '&quot;')}">${g}</option>`).join('')}
+          </select>
+        </div>
+        <div id="builder-result" class="hidden"></div>
+        <button id="builder-submit-btn" onclick="checkBuilder()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition">
+          Проверить сборку ТТК ✅
+        </button>
+      `;
+    }
+
+    function checkBuilder() {
+      const c = builderCocktail;
+      let totalChecks = c.ingredients.length + 2;
+      let passedChecks = 0;
+
+      c.ingredients.forEach((ing, i) => {
+        const inp = document.getElementById(`b-ing-${i}`);
+        const row = document.getElementById(`b-row-${i}`);
+        const rawVal = inp.value.trim();
+        if (rawVal.replace('.', ',') === ing.qty.trim().replace('.', ',')) {
+          passedChecks++;
+          row.className = "flex items-center justify-between gap-2 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-500/70";
+        } else {
+          row.className = "flex items-center justify-between gap-2 bg-rose-950/60 p-2.5 rounded-xl border border-rose-500/70";
+          inp.value = `${rawVal || '—'} → ${ing.qty}`;
+        }
+        inp.disabled = true;
+      });
+
+      const glassSel = document.getElementById('b-glass');
+      if (glassSel.value === c.glass) passedChecks++;
+      const garnishSel = document.getElementById('b-garnish');
+      const targetGarnish = formatGarnish(c);
+      if (garnishSel.value === targetGarnish) passedChecks++;
+
+      const pct = Math.round((passedChecks / totalChecks) * 100);
+      if (pct === 100) resolveWeakItem(c.id);
+      else recordWeakItem(c.id);
+
+      const resDiv = document.getElementById('builder-result');
+      resDiv.classList.remove('hidden');
+      resDiv.innerHTML = `
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs space-y-1">
+          <div class="font-bold ${pct === 100 ? 'text-emerald-400' : 'text-amber-400'}">Результат сборки: ${passedChecks} из ${totalChecks} верно (${pct}%)</div>
+          <div class="text-slate-300">Эталон посуды/выхода: <b>${c.glass}</b></div>
+          <div class="text-slate-300">Эталон декора: <b>${targetGarnish}</b></div>
+        </div>
+      `;
+
+      const btn = document.getElementById('builder-submit-btn');
+      btn.textContent = "Следующая ТТК ➡️";
+      btn.onclick = nextBuilderCocktail;
+    }
+
+    // ================= РЕЖИМ 4: КАРТОЧКИ =================
+    function renderFlashcard() {
+      const pool = getPracticePool();
+      if (fcIndex >= pool.length) fcIndex = 0;
+      const c = pool[fcIndex];
+      document.getElementById('fc-counter').textContent = `Карточка ${fcIndex + 1} из ${pool.length}`;
+      const card = document.getElementById('fc-card');
+
+      if (!fcFlipped) {
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold">${c.catLabel}</span>
+            <button onclick="event.stopPropagation(); openRenameModal(${c.id})" class="text-xs px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300">✏️</button>
+          </div>
+          <div class="my-auto text-center space-y-3 py-8">
+            <h2 class="text-xl font-extrabold text-white">${getName(c)}</h2>
+            <p class="text-xs text-slate-400">Вспомни состав, граммовки, посуду подачи и украшение</p>
+          </div>
+          <div class="text-center text-xs text-amber-400 font-medium">👆 Нажми, чтобы перевернуть</div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+            <h3 class="text-sm font-bold text-amber-400">${getName(c)}</h3>
+            <span class="text-[11px] px-2 py-0.5 rounded bg-slate-700 text-slate-200">${c.method}</span>
+          </div>
+          <div class="space-y-3 my-2">
+            <ul>
+              ${c.ingredients.map(i => `<li class="flex justify-between py-1 border-b border-slate-700/60 text-xs"><span class="text-slate-200">${i.name}</span><span class="font-bold text-amber-300">${i.qty} ${i.unit}</span></li>`).join('')}
+            </ul>
+            <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+              <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
+                <div class="text-[10px] uppercase text-slate-400">Посуда / Выход</div>
+                <div class="font-bold text-white mt-0.5">${c.glass}</div>
+              </div>
+              <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
+                <div class="text-[10px] uppercase text-slate-400">Украшение</div>
+                <div class="font-bold text-emerald-300 mt-0.5">${formatGarnish(c)}</div>
+              </div>
+            </div>
+          </div>
+          <div class="text-center text-[11px] text-slate-400">👆 Нажми, чтобы закрыть</div>
+        `;
+      }
+    }
+
+    function flipCard() { fcFlipped = !fcFlipped; renderFlashcard(); }
+    function nextCard() { const p = getPracticePool(); fcIndex = (fcIndex + 1) % p.length; fcFlipped = false; renderFlashcard(); }
+    function prevCard() { const p = getPracticePool(); fcIndex = (fcIndex - 1 + p.length) % p.length; fcFlipped = false; renderFlashcard(); }
+
+    // ================= РЕЖИМ 5: БАЗА ТТК =================
+    function renderList() {
+      const q = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+      const pool = getPracticePool();
+      const filtered = pool.filter(c =>
+        getName(c).toLowerCase().includes(q) ||
+        c.glass.toLowerCase().includes(q) ||
+        c.ingredients.some(i => i.name.toLowerCase().includes(q)) ||
+        c.garnish.some(g => g.name.toLowerCase().includes(q))
+      );
+
+      document.getElementById('list-container').innerHTML = filtered.map(c => `
+        <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase font-bold">${c.catLabel}</span>
+              <h3 class="text-sm font-bold text-amber-400">${getName(c)}</h3>
+              <p class="text-xs text-slate-400">${c.method} • <span class="text-slate-200 font-medium">${c.glass}</span></p>
+            </div>
+            <button onclick="setMode('builder'); initBuilder(${c.id})" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-semibold shrink-0">Собрать</button>
+          </div>
+          <div class="bg-slate-900/80 rounded-xl p-2.5 space-y-1 text-xs">
+            ${c.ingredients.map(i => `<div class="flex justify-between"><span class="text-slate-300">${i.name}</span><span class="font-bold text-white">${i.qty} ${i.unit}</span></div>`).join('')}
+          </div>
+          <div class="flex items-center justify-between text-xs pt-0.5">
+            <span class="text-slate-400">🍊 Декор/Стандарт:</span>
+            <span class="font-semibold text-emerald-300">${formatGarnish(c)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openRenameModal(id) {
+      renameTargetId = id;
+      const c = allItems.find(x => x.id === id);
+      document.getElementById('rename-input').value = getName(c);
+      document.getElementById('rename-modal').classList.remove('hidden');
+    }
+    function closeRenameModal() { renameTargetId = null; document.getElementById('rename-modal').classList.add('hidden'); }
+    function saveRename() {
+      const val = document.getElementById('rename-input').value.trim();
+      if (val && renameTargetId) {
+        customNames[renameTargetId] = val;
+        localStorage.setItem('ttk_custom_names', JSON.stringify(customNames));
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.saveSharedCustomName(renameTargetId, val);
+        } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
+          fetch(EXTERNAL_API_URL.trim(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'saveCustomName', id: renameTargetId, newName: val })
+          }).catch(() => {});
+        }
+      }
+      closeRenameModal();
+      renderAll();
+    }
+
+    function renderAll() {
+      updateHeaderUI();
+      if (currentMode === 'exam') renderExamView();
+      else if (currentMode === 'practice') renderPracticeQuestion();
+      else if (currentMode === 'builder') initBuilder();
+      else if (currentMode === 'flashcards') renderFlashcard();
+      else if (currentMode === 'list') renderList();
+    }
+
+    renderAll();
+    syncWithGoogleSheet();
+    if (!bartenderName) openUserModal();
+  </script>
+</body>
+</html>
