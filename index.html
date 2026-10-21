@@ -35,11 +35,19 @@
           <span>🍸 Аттестация ТТК (<span id="total-ttk-count">97</span>)</span>
           <span id="sync-indicator" class="text-[10px] font-normal text-slate-400"></span>
         </h1>
-        <button onclick="openUserModal()" class="mt-0.5 flex items-center gap-1 text-xs text-slate-300 hover:text-amber-300 bg-slate-800/90 px-2 py-0.5 rounded-md border border-slate-700">
-          <span>👤</span>
-          <span id="bartender-name-badge" class="font-semibold">Указать имя</span>
-          <span class="text-[10px] text-slate-400">✏️</span>
-        </button>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <button onclick="openUserModal()" class="flex items-center gap-1 text-xs text-slate-300 hover:text-amber-300 bg-slate-800/90 px-2 py-0.5 rounded-md border border-slate-700">
+            <span>👤</span>
+            <span id="bartender-name-badge" class="font-semibold">Указать имя</span>
+            <span class="text-[10px] text-slate-400">✏️</span>
+          </button>
+
+          <!-- Кнопка подсказки установки на главный экран -->
+          <button id="install-help-btn" onclick="openInstallModal()" class="flex items-center gap-1 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/40 font-semibold">
+            <span>📲</span>
+            <span>На экран</span>
+          </button>
+        </div>
       </div>
 
       <div class="flex items-center gap-2">
@@ -144,6 +152,53 @@
         <button onclick="closeRenameModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-200 text-sm">Отмена</button>
         <button onclick="saveRename()" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">Сохранить</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно инструкции: Как добавить на главный экран -->
+  <div id="install-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3.5 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2.5">
+        <h3 class="text-base font-bold text-amber-400">📲 Как добавить иконку на телефон</h3>
+        <button onclick="closeInstallModal()" class="text-slate-400 hover:text-white text-sm px-1">✖</button>
+      </div>
+
+      <!-- Предупреждение, если открыто внутри Telegram / WhatsApp -->
+      <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 space-y-1">
+        <div class="font-bold text-amber-400">⚠️ Шаг 0: Если открыли в Telegram / WhatsApp</div>
+        <div>Нажмите <b>«•••»</b> (или значок компаса/стрелки в углу) и выберите <b>«Открыть в браузере»</b> (Safari или Chrome). Иначе кнопки установки не будет!</div>
+      </div>
+
+      <!-- Блок для iPhone -->
+      <div id="inst-ios" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1.5 text-xs">
+        <div class="font-bold text-white text-sm flex items-center justify-between">
+          <span>🍎 Для iPhone (в браузере Safari)</span>
+          <span id="badge-ios" class="hidden text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Твой телефон</span>
+        </div>
+        <ol class="list-decimal pl-4 space-y-1 text-slate-300">
+          <li>Внизу экрана нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх ⬆️).</li>
+          <li>Пролистайте меню чуть вниз и нажмите <b>«На экран „Домой“»</b> ➕.</li>
+          <li>В правом верхнем углу нажмите <b>«Добавить»</b>.</li>
+        </ol>
+      </div>
+
+      <!-- Блок для Android -->
+      <div id="inst-android" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1.5 text-xs">
+        <div class="font-bold text-white text-sm flex items-center justify-between">
+          <span>🤖 Для Android (в браузере Chrome)</span>
+          <span id="badge-android" class="hidden text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Твой телефон</span>
+        </div>
+        <ol class="list-decimal pl-4 space-y-1 text-slate-300">
+          <li>В правом верхнем углу нажмите <b>три точки (⋮)</b>.</li>
+          <li>Выберите <b>«Добавить на главный экран»</b> (или <b>«Установить приложение»</b>).</li>
+          <li>Нажмите <b>«Добавить»</b>.</li>
+        </ol>
+        <div class="pt-1 text-[11px] text-slate-400 border-t border-slate-800">
+          💡 <b>Для Xiaomi / POCO:</b> если ярлык не появился, включите разрешение: <i>Настройки ➡️ Приложения ➡️ Chrome ➡️ Разрешения ➡️ Ярлыки рабочего стола</i>.
+        </div>
+      </div>
+
+      <button onclick="closeInstallModal()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Понятно, спасибо!</button>
     </div>
   </div>
 
@@ -501,11 +556,10 @@
     let focusedBuilderInputId = null;
     let renameTargetId = null;
 
-    // Авто-очистка данных, приходящих из таблицы (убирает баг "35 г мл" и приводит посуду к единому стандарту)
+    // Авто-очистка данных из таблицы (убирает баг "35 г мл" и приводит посуду к единому стандарту)
     function sanitizeLoadedItems(items) {
       return items.map(item => {
         let g = (item.glass || '').trim();
-        // Единый стандарт для молочных коктейлей и популярных бокалов
         if (/стакан для молочн/i.test(g)) g = "Стакан для молочного коктейля";
         if (/хайбол.*370/i.test(g)) g = "Хайбол 370 мл";
         if (/олд фешн.*355/i.test(g)) g = "Олд Фешн 355 мл";
@@ -516,7 +570,6 @@
         const cleanPart = (obj) => {
           let q = String(obj.qty || '').trim();
           let u = String(obj.unit || '').trim();
-          // Если внутрь qty попала буква "г" или "шт", а в unit стоит "мл" -> чистим!
           const m = q.match(/^([\d.,]+)\s*(г|гр|мл|шт\.?|кап\.?|вет\.?|ч)$/i);
           if (m) {
             q = m[1];
@@ -1532,6 +1585,36 @@
       }
       closeRenameModal();
       renderAll();
+    }
+
+    // Проверка: если уже открыто с иконки главного экрана — прячем кнопку "📲 На экран"
+    const isStandaloneApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandaloneApp) {
+      const btn = document.getElementById('install-help-btn');
+      if (btn) btn.classList.add('hidden');
+    }
+
+    function openInstallModal() {
+      if (isExamInProgress()) {
+        showToast('🔒 Заверши текущий билет, чтобы открыть инструкцию!');
+        return;
+      }
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPhone|iPad|iPod/i.test(ua);
+      const isAndroid = /Android/i.test(ua);
+
+      if (isIOS) {
+        document.getElementById('inst-ios').classList.add('border-emerald-500/60');
+        document.getElementById('badge-ios').classList.remove('hidden');
+      } else if (isAndroid) {
+        document.getElementById('inst-android').classList.add('border-emerald-500/60');
+        document.getElementById('badge-android').classList.remove('hidden');
+      }
+      document.getElementById('install-modal').classList.remove('hidden');
+    }
+
+    function closeInstallModal() {
+      document.getElementById('install-modal').classList.add('hidden');
     }
 
     function renderAll() {
