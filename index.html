@@ -20,6 +20,19 @@
       opacity: 0.35;
       cursor: not-allowed;
     }
+    /* Полностью убираем залипание фокуса и подсветки кнопок на телефонах */
+    button:focus, button:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    .opt-btn {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .opt-btn:active {
+      background-color: rgba(245, 158, 11, 0.22) !important;
+      border-color: #fbbf24 !important;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col pb-20">
@@ -31,26 +44,25 @@
   <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-2.5">
     <div class="max-w-xl mx-auto flex items-center justify-between gap-2">
       <div>
-        <h1 class="text-base font-bold text-amber-400 leading-tight flex items-center gap-1.5">
-          <span>🍸 Аттестация ТТК (<span id="total-ttk-count">97</span>)</span>
-          <span id="sync-indicator" class="text-[10px] font-normal text-slate-400"></span>
+        <h1 class="text-base font-bold text-amber-400 leading-tight">
+          🍸 Аттестация ТТК (<span id="total-ttk-count">97</span>)
         </h1>
-        <div class="flex items-center gap-1.5 mt-0.5">
-          <button onclick="openUserModal()" class="flex items-center gap-1 text-xs text-slate-300 hover:text-amber-300 bg-slate-800/90 px-2 py-0.5 rounded-md border border-slate-700">
+        <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          <button onclick="this.blur(); openUserModal()" class="flex items-center gap-1 text-xs text-slate-300 bg-slate-800/90 px-2 py-0.5 rounded-md border border-slate-700">
             <span>👤</span>
-            <span id="bartender-name-badge" class="font-semibold">Указать имя</span>
+            <span id="bartender-name-badge" class="font-semibold">Указать имя и ресторан</span>
             <span class="text-[10px] text-slate-400">✏️</span>
           </button>
 
           <!-- Кнопка подсказки установки на главный экран -->
-          <button id="install-help-btn" onclick="openInstallModal()" class="flex items-center gap-1 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/40 font-semibold">
+          <button id="install-help-btn" onclick="this.blur(); openInstallModal()" class="flex items-center gap-1 text-xs text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/40 font-semibold">
             <span>📲</span>
             <span>На экран</span>
           </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         <div class="text-right">
           <div class="text-[11px] text-slate-400" id="header-status-label">Порог: 85% • ⏱ 30–45 сек</div>
           <div class="text-sm font-extrabold text-emerald-400" id="header-progress-badge">Зачетка: 0 / 6</div>
@@ -62,11 +74,11 @@
   <!-- Навигация по 5 режимам -->
   <div class="max-w-xl mx-auto w-full px-4 pt-3">
     <div class="grid grid-cols-5 gap-1 bg-slate-800/90 p-1 rounded-xl border border-slate-700/70 text-[11px] font-medium">
-      <button onclick="setMode('exam')" id="tab-exam" class="py-2 px-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition">🎓 Зачетка</button>
-      <button onclick="setMode('practice')" id="tab-practice" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">🎯 Тренир.</button>
-      <button onclick="setMode('builder')" id="tab-builder" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">🧪 Сборка</button>
-      <button onclick="setMode('flashcards')" id="tab-flashcards" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">🃏 Карточки</button>
-      <button onclick="setMode('list')" id="tab-list" class="py-2 px-1 rounded-lg text-slate-300 hover:text-white transition">📋 База</button>
+      <button onclick="this.blur(); setMode('exam')" id="tab-exam" class="py-2 px-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition">🎓 Зачетка</button>
+      <button onclick="this.blur(); setMode('practice')" id="tab-practice" class="py-2 px-1 rounded-lg text-slate-300 transition">🎯 Тренир.</button>
+      <button onclick="this.blur(); setMode('builder')" id="tab-builder" class="py-2 px-1 rounded-lg text-slate-300 transition">🧪 Сборка</button>
+      <button onclick="this.blur(); setMode('flashcards')" id="tab-flashcards" class="py-2 px-1 rounded-lg text-slate-300 transition">🃏 Карточки</button>
+      <button onclick="this.blur(); setMode('list')" id="tab-list" class="py-2 px-1 rounded-lg text-slate-300 transition">📋 База</button>
     </div>
   </div>
 
@@ -82,24 +94,24 @@
     <div id="shared-category-bar" class="hidden space-y-1.5">
       <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Фильтр раздела:</div>
       <div class="flex flex-wrap gap-1.5 text-xs">
-        <button onclick="setPracticeCategory('ALL')" id="pcat-ALL" class="px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition">🌐 Все (97)</button>
-        <button onclick="setPracticeCategory('WEAK')" id="pcat-WEAK" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40">🔥 Мои ошибки (<span id="weak-count-badge">0</span>)</button>
-        <button onclick="setPracticeCategory('ALC')" id="pcat-ALC" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🍸 Алк. коктейли (24)</button>
-        <button onclick="setPracticeCategory('NA')" id="pcat-NA" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🥤 Б/А и лимонады (11)</button>
-        <button onclick="setPracticeCategory('COFFEE')" id="pcat-COFFEE" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">☕ Кофе и Матча (19)</button>
-        <button onclick="setPracticeCategory('TEA')" id="pcat-TEA" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🫖 Чаи и Глинтв. (11)</button>
-        <button onclick="setPracticeCategory('KIDS')" id="pcat-KIDS" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🧸 Детское (11)</button>
-        <button onclick="setPracticeCategory('PREP')" id="pcat-PREP" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🧪 Настойки и Сеты (21)</button>
+        <button onclick="this.blur(); setPracticeCategory('ALL')" id="pcat-ALL" class="px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition">🌐 Все (97)</button>
+        <button onclick="this.blur(); setPracticeCategory('WEAK')" id="pcat-WEAK" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40">🔥 Мои ошибки (<span id="weak-count-badge">0</span>)</button>
+        <button onclick="this.blur(); setPracticeCategory('ALC')" id="pcat-ALC" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🍸 Алк. коктейли (24)</button>
+        <button onclick="this.blur(); setPracticeCategory('NA')" id="pcat-NA" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🥤 Б/А и лимонады (11)</button>
+        <button onclick="this.blur(); setPracticeCategory('COFFEE')" id="pcat-COFFEE" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">☕ Кофе и Матча (19)</button>
+        <button onclick="this.blur(); setPracticeCategory('TEA')" id="pcat-TEA" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🫖 Чаи и Глинтв. (11)</button>
+        <button onclick="this.blur(); setPracticeCategory('KIDS')" id="pcat-KIDS" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🧸 Детское (11)</button>
+        <button onclick="this.blur(); setPracticeCategory('PREP')" id="pcat-PREP" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">🧪 Настойки и Сеты (21)</button>
       </div>
     </div>
 
     <!-- РЕЖИМ 2: ТРЕНИРОВКА С ПОДСКАЗКАМИ -->
     <section id="view-practice" class="hidden space-y-3">
       <div class="flex flex-wrap gap-1.5 text-xs">
-        <button onclick="setQuizFilter('all')" id="qf-all" class="px-3 py-1 rounded-full bg-slate-700 text-amber-300 font-semibold border border-amber-500/40">Все вопросы</button>
-        <button onclick="setQuizFilter('qty')" id="qf-qty" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">⚖️ Граммовки</button>
-        <button onclick="setQuizFilter('glass')" id="qf-glass" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">🥃 Посуда / Выход</button>
-        <button onclick="setQuizFilter('garnish')" id="qf-garnish" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">🍊 Украшение</button>
+        <button onclick="this.blur(); setQuizFilter('all')" id="qf-all" class="px-3 py-1 rounded-full bg-slate-700 text-amber-300 font-semibold border border-amber-500/40">Все вопросы</button>
+        <button onclick="this.blur(); setQuizFilter('qty')" id="qf-qty" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">⚖️ Граммовки</button>
+        <button onclick="this.blur(); setQuizFilter('glass')" id="qf-glass" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">🥃 Посуда / Выход</button>
+        <button onclick="this.blur(); setQuizFilter('garnish')" id="qf-garnish" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">🍊 Украшение</button>
       </div>
       <div id="practice-container" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4"></div>
     </section>
@@ -115,10 +127,10 @@
         <span id="fc-counter">Карточка 1</span>
         <span>Нажми на карточку, чтобы перевернуть</span>
       </div>
-      <div id="fc-card" onclick="flipCard()" class="cursor-pointer select-none bg-slate-800 border border-slate-700 rounded-2xl p-5 min-h-[340px] flex flex-col justify-between shadow-lg transition hover:border-amber-500/40"></div>
+      <div id="fc-card" onclick="flipCard()" class="cursor-pointer select-none bg-slate-800 border border-slate-700 rounded-2xl p-5 min-h-[340px] flex flex-col justify-between shadow-lg transition"></div>
       <div class="grid grid-cols-2 gap-3 pt-1">
-        <button onclick="prevCard()" class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-sm border border-slate-700">⬅️ Назад</button>
-        <button onclick="nextCard()" class="py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Дальше ➡️</button>
+        <button onclick="this.blur(); prevCard()" class="py-3 rounded-xl bg-slate-800 active:bg-slate-700 font-semibold text-sm border border-slate-700">⬅️ Назад</button>
+        <button onclick="this.blur(); nextCard()" class="py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-sm">Дальше ➡️</button>
       </div>
     </section>
 
@@ -126,20 +138,36 @@
     <section id="view-list" class="hidden space-y-3">
       <div class="flex gap-2">
         <input type="text" id="search-input" oninput="renderList()" placeholder="Поиск по названию, ингредиенту или бокалу..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400" />
-        <button onclick="forceCleanNames()" title="Сбросить все переименования" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-300 hover:bg-slate-700 shrink-0">Сброс имён</button>
+        <button onclick="this.blur(); forceCleanNames()" title="Сбросить все переименования" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-300 shrink-0">Сброс имён</button>
       </div>
       <div id="list-container" class="space-y-3"></div>
     </section>
 
   </main>
 
-  <!-- Модальное окно ввода имени бармена -->
+  <!-- Модальное окно идентификации сотрудника (Имя + Ресторан) -->
   <div id="user-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-      <h3 class="text-base font-bold text-amber-400">👤 Представься для Зачетки</h3>
-      <p class="text-xs text-slate-300">Введи свое имя. Результаты сдачи каждой категории будут автоматически отмечаться в твоей личной зачетке и в сводном табеле Google Таблицы.</p>
-      <input type="text" id="user-name-input" placeholder="Например: Виль" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
-      <button onclick="saveUserName()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Сохранить</button>
+      <div>
+        <h3 class="text-base font-bold text-amber-400">👤 Вход в личную Зачетку</h3>
+        <p class="text-xs text-slate-300 mt-1">Введи имя и выбери свой ресторан. По этой связке твой прогресс сохраняется в таблице — при входе с любого телефона все твои сданные зачеты автоматически восстановятся!</p>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1">1. Имя и Фамилия:</label>
+          <input type="text" id="user-name-input" placeholder="Например: Виль" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1">2. Выбери ресторан / точку:</label>
+          <!-- Быстрый фильтр по списку ресторанов -->
+          <input type="text" id="restaurant-filter-input" oninput="filterRestaurantSelect()" placeholder="🔍 Быстрый поиск (например: Навагинская)..." class="w-full bg-slate-900/70 border border-slate-700/80 rounded-t-xl px-3.5 py-2 text-xs text-amber-300 placeholder-slate-500 focus:outline-none focus:border-amber-400 border-b-0" />
+          <select id="user-restaurant-select" class="w-full bg-slate-900 border border-slate-700 rounded-b-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"></select>
+        </div>
+      </div>
+
+      <button onclick="this.blur(); saveUserName()" class="w-full py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg">Сохранить и загрузить Зачетку ➡️</button>
     </div>
   </div>
 
@@ -149,8 +177,8 @@
       <h3 class="text-base font-bold text-amber-400">✏️ Переименовать позицию</h3>
       <input type="text" id="rename-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeRenameModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-200 text-sm">Отмена</button>
-        <button onclick="saveRename()" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">Сохранить</button>
+        <button onclick="this.blur(); closeRenameModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-200 text-sm">Отмена</button>
+        <button onclick="this.blur(); saveRename()" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">Сохранить</button>
       </div>
     </div>
   </div>
@@ -160,16 +188,14 @@
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3.5 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-700 pb-2.5">
         <h3 class="text-base font-bold text-amber-400">📲 Как добавить иконку на телефон</h3>
-        <button onclick="closeInstallModal()" class="text-slate-400 hover:text-white text-sm px-1">✖</button>
+        <button onclick="this.blur(); closeInstallModal()" class="text-slate-400 text-sm px-1">✖</button>
       </div>
 
-      <!-- Предупреждение, если открыто внутри Telegram / WhatsApp -->
       <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 space-y-1">
         <div class="font-bold text-amber-400">⚠️ Шаг 0: Если открыли в Telegram / WhatsApp</div>
         <div>Нажмите <b>«•••»</b> (или значок компаса/стрелки в углу) и выберите <b>«Открыть в браузере»</b> (Safari или Chrome). Иначе кнопки установки не будет!</div>
       </div>
 
-      <!-- Блок для iPhone -->
       <div id="inst-ios" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1.5 text-xs">
         <div class="font-bold text-white text-sm flex items-center justify-between">
           <span>🍎 Для iPhone (в браузере Safari)</span>
@@ -182,7 +208,6 @@
         </ol>
       </div>
 
-      <!-- Блок для Android -->
       <div id="inst-android" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1.5 text-xs">
         <div class="font-bold text-white text-sm flex items-center justify-between">
           <span>🤖 Для Android (в браузере Chrome)</span>
@@ -198,7 +223,7 @@
         </div>
       </div>
 
-      <button onclick="closeInstallModal()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Понятно, спасибо!</button>
+      <button onclick="this.blur(); closeInstallModal()" class="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">Понятно, спасибо!</button>
     </div>
   </div>
 
@@ -209,9 +234,106 @@
     // =========================================================================
 
     const PASS_THRESHOLD = 85;
-    const SHORT_QUESTION_SEC = 30; // Для коротких вопросов (граммовка, посуда)
-    const LONG_QUESTION_SEC = 45;  // Для длинных вопросов (украшения, длинные формулировки)
-    const DATA_VERSION = 'v6_clean_ux_2026';
+    const SHORT_QUESTION_SEC = 30;
+    const LONG_QUESTION_SEC = 45;
+    const DATA_VERSION = 'v7_user_profiles_2026';
+
+    // Полный список ресторанов по регионам
+    const RESTAURANT_GROUPS = [
+      {
+        group: "Краснодар",
+        items: [
+          "Краснодар 1 Мая",
+          "Краснодар Дальний 3",
+          "Краснодар Западный обход",
+          "Краснодар Карякина",
+          "Краснодар Красная 109",
+          "Краснодар Красная 41",
+          "Краснодар Любимово",
+          "Краснодар Московская 170",
+          "Краснодар ТЦ Сыр",
+          "Краснодар Чекистов 15/1"
+        ]
+      },
+      {
+        group: "Парус Краснодарский край",
+        items: [
+          "Армавир",
+          "Белореченск",
+          "Ейск",
+          "Каневская",
+          "Кропоткин",
+          "Ставрополь",
+          "Тихорецк"
+        ]
+      },
+      {
+        group: "Побережье",
+        items: [
+          "Анапа",
+          "Геленджик",
+          "Липецк Советская",
+          "Липецк Шуминского",
+          "Новороссийск Видова",
+          "Новороссийск Губернского",
+          "Новороссийск ТЦ Черноморский",
+          "Новороссийск Южная 26",
+          "Сочи Адлер",
+          "Сочи Навагинская",
+          "Сочи Учительская 6/2"
+        ]
+      },
+      {
+        group: "Ростовская обл",
+        items: [
+          "Азов",
+          "Аксай",
+          "Батайск Воровского",
+          "Батайск Энгельса",
+          "Новочеркасск",
+          "Ростов-нД Б.Садовая",
+          "Ростов-нД Богданова 71",
+          "Ростов-нД Шолохова",
+          "Таганрог",
+          "Шахты"
+        ]
+      },
+      {
+        group: "Ростов-на-Дону",
+        items: [
+          "Ростов-нД Буденновский",
+          "Ростов-нД Вересаево",
+          "Ростов-нД Зорге",
+          "Ростов-нД Комарова",
+          "Ростов-нД Коммунистический 30",
+          "Ростов-нД Космонавтов",
+          "Ростов-нД Курсантов 224",
+          "Ростов-нД Ленина",
+          "Ростов-нД Нагибина",
+          "Ростов-нД Петренко",
+          "Ростов-нД Пушкинская"
+        ]
+      },
+      {
+        group: "Станицы Пицца",
+        items: [
+          "Горячий Ключ",
+          "Кореновск Красная",
+          "Крымск",
+          "Ленинградская",
+          "Майкоп",
+          "Славянск-на-Кубани",
+          "Тимашевск",
+          "Усть-Лабинск"
+        ]
+      },
+      {
+        group: "Франчайзи",
+        items: [
+          "Абакан"
+        ]
+      }
+    ];
 
     const CATEGORY_META = {
       ALC:    { code: "ALC",    title: "🍸 Алкогольные коктейли", count: 24, examQuestions: 24, desc: "24 вопроса без повторов по всем 24 коктейлям бара" },
@@ -536,9 +658,12 @@
     }
 
     let bartenderName = localStorage.getItem('ttk_bartender_name') || '';
+    let restaurantName = localStorage.getItem('ttk_restaurant_name') || '';
     let customNames = JSON.parse(localStorage.getItem('ttk_custom_names') || '{}');
-    let examProgress = JSON.parse(localStorage.getItem('ttk_exam_progress') || '{}');
-    let weakItems = JSON.parse(localStorage.getItem('ttk_weak_items') || '[]');
+    let serverProfiles = JSON.parse(localStorage.getItem('ttk_server_profiles') || '{}');
+    let examProgress = {};
+    let weakItems = [];
+
     let currentMode = 'exam';
     let practiceCategory = 'ALL';
     let quizFilter = 'all';
@@ -556,7 +681,86 @@
     let focusedBuilderInputId = null;
     let renameTargetId = null;
 
-    // Авто-очистка данных из таблицы (убирает баг "35 г мл" и приводит посуду к единому стандарту)
+    function makeUserKey(name, rest) {
+      const n = String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const r = String(rest || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      return `${n}|${r}`;
+    }
+
+    // Загрузка прогресса конкретного сотрудника (из локальной памяти + авто-восстановление из Google Таблицы)
+    function loadCurrentProfileProgress() {
+      if (!bartenderName) {
+        examProgress = {};
+        weakItems = [];
+        return;
+      }
+      const key = makeUserKey(bartenderName, restaurantName);
+      const localSaved = JSON.parse(localStorage.getItem(`ttk_prog_${key}`) || '{}');
+      const localWeak = JSON.parse(localStorage.getItem(`ttk_weak_${key}`) || '[]');
+
+      // Проверяем, есть ли этот сотрудник в облачном "Табеле аттестации"
+      const cloudProfile = serverProfiles[key] || serverProfiles[makeUserKey(bartenderName, '')];
+      const cloudProg = (cloudProfile && cloudProfile.progress) ? cloudProfile.progress : {};
+
+      // Объединяем локальный и облачный прогресс (чтобы при входе с нового телефона всё вернулось!)
+      examProgress = { ...localSaved };
+      Object.keys(cloudProg).forEach(cat => {
+        if (!examProgress[cat] || cloudProg[cat].pct >= examProgress[cat].pct) {
+          examProgress[cat] = cloudProg[cat];
+        }
+      });
+
+      localStorage.setItem(`ttk_prog_${key}`, JSON.stringify(examProgress));
+      weakItems = localWeak;
+    }
+
+    function saveCurrentProfileProgress() {
+      if (!bartenderName) return;
+      const key = makeUserKey(bartenderName, restaurantName);
+      localStorage.setItem(`ttk_prog_${key}`, JSON.stringify(examProgress));
+      localStorage.setItem(`ttk_weak_${key}`, JSON.stringify(weakItems));
+    }
+
+    // Заполнение выпадающего списка ресторанов с быстрым фильтром
+    function populateRestaurantSelect(filterText = '', selectedVal = '') {
+      const sel = document.getElementById('user-restaurant-select');
+      if (!sel) return;
+      const q = String(filterText || '').trim().toLowerCase();
+      const targetVal = selectedVal || sel.value || restaurantName;
+
+      let html = `<option value="">— Выбери свой ресторан —</option>`;
+      let matchCount = 0;
+      let lastMatchedItem = '';
+
+      RESTAURANT_GROUPS.forEach(groupObj => {
+        const filteredItems = groupObj.items.filter(item =>
+          !q || item.toLowerCase().includes(q) || groupObj.group.toLowerCase().includes(q)
+        );
+        if (filteredItems.length > 0) {
+          html += `<optgroup label="📍 ${groupObj.group}">`;
+          filteredItems.forEach(item => {
+            matchCount++;
+            lastMatchedItem = item;
+            const isSel = item === targetVal ? 'selected' : '';
+            html += `<option value="${item}" ${isSel}>${item}</option>`;
+          });
+          html += `</optgroup>`;
+        }
+      });
+
+      sel.innerHTML = html;
+      // Если по поиску остался ровно 1 ресторан — выбираем его автоматически
+      if (q && matchCount === 1) {
+        sel.value = lastMatchedItem;
+      }
+    }
+
+    function filterRestaurantSelect() {
+      const q = document.getElementById('restaurant-filter-input')?.value || '';
+      populateRestaurantSelect(q);
+    }
+
+    // Авто-очистка данных из таблицы
     function sanitizeLoadedItems(items) {
       return items.map(item => {
         let g = (item.glass || '').trim();
@@ -585,21 +789,26 @@
       });
     }
 
-    // Универсальная синхронизация с Google Таблицей
+    // Универсальная синхронизация с Google Таблицей (ТТК + Облачные профили сотрудников)
     function syncWithGoogleSheet() {
-      const ind = document.getElementById('sync-indicator');
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        if (ind) ind.textContent = '🔄';
         google.script.run.withSuccessHandler(function(sheetItems) {
           if (sheetItems && Array.isArray(sheetItems) && sheetItems.length > 0) {
             allItems = sanitizeLoadedItems(sheetItems);
             document.getElementById('total-ttk-count').textContent = allItems.length;
           }
-          if (ind) ind.textContent = '☁️';
           renderAll();
         }).getItemsFromSheetIfAvailable();
+
+        google.script.run.withSuccessHandler(function(profiles) {
+          if (profiles && typeof profiles === 'object') {
+            serverProfiles = profiles;
+            localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
+            loadCurrentProfileProgress();
+            renderAll();
+          }
+        }).getAllUserProfiles();
       } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
-        if (ind) ind.textContent = '🔄';
         const url = EXTERNAL_API_URL.trim() + (EXTERNAL_API_URL.includes('?') ? '&' : '?') + 'action=getInitData';
         fetch(url)
           .then(r => r.json())
@@ -614,22 +823,29 @@
               });
               localStorage.setItem('ttk_custom_names', JSON.stringify(customNames));
             }
-            if (ind) ind.textContent = '☁️';
+            if (data && data.profiles && typeof data.profiles === 'object') {
+              serverProfiles = data.profiles;
+              localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
+              loadCurrentProfileProgress();
+            }
             renderAll();
           })
-          .catch(() => {
-            if (ind) ind.textContent = '';
-          });
+          .catch(() => {});
       }
     }
 
-    // Анти-чит: фиксируем сворачивание вкладки во время экзамена
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && isExamInProgress()) {
         activeExam.tabSwitches = (activeExam.tabSwitches || 0) + 1;
         showToast(`⚠️ Зафиксировано сворачивание окна (${activeExam.tabSwitches})! Это отразится в отчете.`);
       }
     });
+
+    function clearActiveFocus() {
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+    }
 
     function showToast(msg) {
       const el = document.getElementById('toast-alert');
@@ -647,7 +863,7 @@
     function recordWeakItem(id) {
       if (!weakItems.includes(id)) {
         weakItems.push(id);
-        localStorage.setItem('ttk_weak_items', JSON.stringify(weakItems));
+        saveCurrentProfileProgress();
         updateWeakBadge();
       }
     }
@@ -655,7 +871,7 @@
     function resolveWeakItem(id) {
       if (weakItems.includes(id)) {
         weakItems = weakItems.filter(x => x !== id);
-        localStorage.setItem('ttk_weak_items', JSON.stringify(weakItems));
+        saveCurrentProfileProgress();
         updateWeakBadge();
       }
     }
@@ -688,16 +904,12 @@
       return c.defaultName;
     }
 
-    // 1. Формат украшения БЕЗ ГРАММОВОК — для быстрых и читаемых ответов в тестах и сборке
     function formatGarnishTextOnly(c) {
       if (!c.garnish || c.garnish.length === 0) return 'Без украшения';
-      if (c.cat === 'PREP') {
-        return c.garnish.map(g => g.name).join(' + ');
-      }
+      if (c.cat === 'PREP') return c.garnish.map(g => g.name).join(' + ');
       return c.garnish.map(g => g.name.trim()).join(' + ');
     }
 
-    // 2. Полный формат украшения С ГРАММОВКАМИ — для справочника Базы и Карточек
     function formatGarnishFull(c) {
       if (!c.garnish || c.garnish.length === 0) return 'Без украшения';
       return c.garnish.map(g => {
@@ -707,7 +919,6 @@
       }).join(' + ');
     }
 
-    // Нормализация строк, чтобы похожие окончания ("коктейля" / "коктейлей") никогда не попадали в один вопрос
     function normalizeForCompare(str) {
       return String(str || '')
         .toLowerCase()
@@ -722,7 +933,7 @@
 
     function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-    // ================= СПОКОЙНЫЙ ДИНАМИЧЕСКИЙ ТАЙМЕР (30 / 45 СЕК БЕЗ ПОЛОСКИ) =================
+    // ================= СПОКОЙНЫЙ ДИНАМИЧЕСКИЙ ТАЙМЕР (30 / 45 СЕК) =================
     function stopQuestionTimer() {
       if (examTimerId) {
         clearInterval(examTimerId);
@@ -778,7 +989,15 @@
     }
 
     function updateHeaderUI() {
-      document.getElementById('bartender-name-badge').textContent = bartenderName ? bartenderName : 'Указать имя';
+      const badgeName = document.getElementById('bartender-name-badge');
+      if (bartenderName && restaurantName) {
+        badgeName.textContent = `${bartenderName} • ${restaurantName}`;
+      } else if (bartenderName) {
+        badgeName.textContent = bartenderName;
+      } else {
+        badgeName.textContent = 'Указать имя и ресторан';
+      }
+
       let passed = 0;
       MAIN_STATIONS.forEach(k => {
         if (examProgress[k] && examProgress[k].pct >= PASS_THRESHOLD) passed++;
@@ -797,23 +1016,39 @@
 
     function openUserModal() {
       if (isExamInProgress()) {
-        showToast('🔒 Нельзя менять имя во время сдачи билета!');
+        showToast('🔒 Нельзя менять профиль во время сдачи билета!');
         return;
       }
       document.getElementById('user-name-input').value = bartenderName;
+      const filterInp = document.getElementById('restaurant-filter-input');
+      if (filterInp) filterInp.value = '';
+      populateRestaurantSelect('', restaurantName);
       document.getElementById('user-modal').classList.remove('hidden');
     }
 
     function saveUserName() {
-      const val = document.getElementById('user-name-input').value.trim();
-      if (!val) return alert('Введи свое имя!');
-      bartenderName = val;
+      const nameVal = document.getElementById('user-name-input').value.trim();
+      const restVal = document.getElementById('user-restaurant-select').value.trim();
+      if (!nameVal) return alert('Пожалуйста, введи свое Имя!');
+      if (!restVal) return alert('Пожалуйста, выбери свой Ресторан из списка!');
+
+      bartenderName = nameVal;
+      restaurantName = restVal;
       localStorage.setItem('ttk_bartender_name', bartenderName);
+      localStorage.setItem('ttk_restaurant_name', restaurantName);
+
+      loadCurrentProfileProgress();
       document.getElementById('user-modal').classList.add('hidden');
-      updateHeaderUI();
+      renderAll();
+
+      const restoredCount = Object.keys(examProgress).length;
+      if (restoredCount > 0) {
+        showToast(`✅ Профиль «${bartenderName} (${restaurantName})» загружен!`);
+      }
     }
 
     function setMode(mode) {
+      clearActiveFocus();
       if (isExamInProgress() && mode !== 'exam') {
         showToast('🔒 Идет экзамен! Переключение вкладок заблокировано до конца билета.');
         return;
@@ -824,13 +1059,14 @@
         document.getElementById(`view-${m}`).classList.toggle('hidden', m !== mode);
         document.getElementById(`tab-${m}`).className = m === mode
           ? "py-2 px-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition"
-          : "py-2 px-1 rounded-lg text-slate-300 hover:text-white transition";
+          : "py-2 px-1 rounded-lg text-slate-300 transition";
       });
       document.getElementById('shared-category-bar').classList.toggle('hidden', mode === 'exam');
       renderAll();
     }
 
     function setPracticeCategory(cat) {
+      clearActiveFocus();
       if (cat === 'WEAK' && weakItems.length === 0) {
         showToast('🎉 У тебя пока нет записанных ошибок! Пройди тест или тренировку.');
         return;
@@ -863,7 +1099,6 @@
       return allItems.filter(x => x.cat === practiceCategory);
     }
 
-    // УМНЫЙ ПОДБОР ОТВЕТОВ СТРОГО ВНУТРИ КАТЕГОРИИ НАПИТКА (БЕЗ ДУБЛЕЙ ПАДЕЖЕЙ)
     function getCategoryDistractors(item, extractorFn, count = 3) {
       const correctVal = extractorFn(item);
       const normCorrect = normalizeForCompare(correctVal);
@@ -952,7 +1187,6 @@
         options = shuffle([correctAnswer, ...wrongs]);
       }
 
-      // Динамический расчет времени: если это вопрос про украшение или суммарный текст ответов длинный -> 45 сек, иначе -> 30 сек
       const totalChars = questionText.length + options.reduce((acc, o) => acc + String(o).length, 0);
       const timeLimitSec = (qType === 'garnish' || totalChars > 110) ? LONG_QUESTION_SEC : SHORT_QUESTION_SEC;
 
@@ -961,7 +1195,8 @@
 
     // ================= РЕЖИМ 1: ЗАЧЕТКА И СЛЕПОЙ ЭКЗАМЕН С ТАЙМЕРОМ =================
     function startCategoryExam(catCode) {
-      if (!bartenderName) {
+      clearActiveFocus();
+      if (!bartenderName || !restaurantName) {
         openUserModal();
         return;
       }
@@ -993,6 +1228,7 @@
     }
 
     function cancelActiveExam() {
+      clearActiveFocus();
       if (confirm('Досрочно прервать экзамен? Билет будет закрыт и сброшен.')) {
         stopQuestionTimer();
         activeExam = null;
@@ -1002,6 +1238,7 @@
     }
 
     function answerBlindExam(optIdx) {
+      clearActiveFocus();
       if (!activeExam) return;
       stopQuestionTimer();
       const q = activeExam.queue[activeExam.index];
@@ -1047,6 +1284,7 @@
     }
 
     function renderExamView() {
+      clearActiveFocus();
       const container = document.getElementById('exam-container');
 
       if (!activeExam) {
@@ -1060,7 +1298,7 @@
           const m = CATEGORY_META[key];
           const rec = examProgress[key];
           let statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300 text-xs font-semibold">⏳ Не сдавал</span>`;
-          let borderClass = "border-slate-700 hover:border-slate-500";
+          let borderClass = "border-slate-700";
 
           if (rec) {
             if (rec.pct >= PASS_THRESHOLD) {
@@ -1083,7 +1321,7 @@
               </div>
               <div class="flex items-center justify-between pt-1 border-t border-slate-700/60 text-xs">
                 <span class="text-slate-400">Билет: <b>${m.examQuestions} вопр.</b> • ⏱ 30–45 сек</span>
-                <button onclick="startCategoryExam('${key}')" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition shadow">
+                <button onclick="this.blur(); startCategoryExam('${key}')" class="px-4 py-2 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold transition shadow">
                   ${rec ? 'Пересдать ➡️' : 'Сдать зачет ➡️'}
                 </button>
               </div>
@@ -1097,20 +1335,24 @@
               <div class="text-xs font-bold text-rose-300">🔥 Слабые места: ${weakItems.length} поз.</div>
               <div class="text-[11px] text-slate-300">Отработай позиции, в которых недавно ошибался.</div>
             </div>
-            <button onclick="setMode('practice'); setPracticeCategory('WEAK');" class="px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs shrink-0">Отработать</button>
+            <button onclick="this.blur(); setMode('practice'); setPracticeCategory('WEAK');" class="px-3 py-2 rounded-xl bg-rose-500 active:bg-rose-400 text-white font-bold text-xs shrink-0">Отработать</button>
           </div>
         ` : '';
 
+        const profileTitle = bartenderName
+          ? `${bartenderName} (${restaurantName || 'Ресторан не выбран'})`
+          : 'Бармен';
+
         container.innerHTML = `
           <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2">
               <div>
                 <span class="text-[11px] uppercase tracking-wider text-amber-400 font-bold">Личная зачетка бармена</span>
-                <h2 class="text-base font-bold text-white">${bartenderName || 'Бармен'} — закрыто ${passedCount} из 6 станций</h2>
+                <h2 class="text-base font-bold text-white">${profileTitle} — закрыто ${passedCount} из 6 станций</h2>
               </div>
-              <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-bold border border-slate-700">⏱ 30 / 45 сек</span>
+              <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 font-bold border border-slate-700 shrink-0">⏱ 30 / 45 сек</span>
             </div>
-            <p class="text-xs text-slate-400">Во время сдачи билета переключение вкладок <b>блокируется</b>. На короткие вопросы дается <b>30 сек</b>, на объемные — <b>45 сек</b>. Результат автоматически заносится в Google Таблицу.</p>
+            <p class="text-xs text-slate-400">Во время сдачи билета переключение вкладок <b>блокируется</b>. На короткие вопросы дается <b>30 сек</b>, на объемные — <b>45 сек</b>. Результат сохраняется за твоим профилем в Google Таблице.</p>
           </div>
           ${weakBanner}
           <div class="space-y-2.5">${cardsHTML}</div>
@@ -1118,7 +1360,6 @@
         return;
       }
 
-      // ЭКРАН ЗАВЕРШЕНИЯ ЭКЗАМЕНА (С ЧИСТЫМИ КАРТОЧКАМИ РАЗБОРА ОШИБОК)
       if (activeExam.index >= activeExam.queue.length) {
         stopQuestionTimer();
         const total = activeExam.queue.length;
@@ -1127,7 +1368,7 @@
         const passed = pct >= PASS_THRESHOLD;
 
         examProgress[activeExam.catCode] = { pct, date: new Date().toLocaleDateString('ru-RU') };
-        localStorage.setItem('ttk_exam_progress', JSON.stringify(examProgress));
+        saveCurrentProfileProgress();
         updateHeaderUI();
 
         const tabSwitchWarningHTML = activeExam.tabSwitches > 0 ? `
@@ -1156,7 +1397,6 @@
             `).join('')}</div>`
           : `<p class="text-xs text-emerald-300 font-semibold">Ни одной ошибки! 100% знание ТТК 🔥</p>`;
 
-        // Формируем компактные строки для отправки в саму Google Таблицу
         const sheetMistakesStrings = activeExam.mistakes.map(m =>
           `${m.drinkName} [${m.questionText} -> Ответил: "${m.chosenAnswer}" | Правильно: "${m.correctAnswer}"]`
         );
@@ -1171,7 +1411,7 @@
                 ${passed ? '✅ ЗАЧЕТ УСПЕШНО СДАН!' : `❌ НА ПЕРЕСДАЧУ (НУЖНО МИНИМУМ ${PASS_THRESHOLD}%)`}
               </div>
               <h2 class="text-2xl font-extrabold text-white">${pct}% (${correct} из ${total})</h2>
-              <p class="text-xs text-slate-300 font-medium">${activeExam.title} • Бармен: <b>${bartenderName}</b></p>
+              <p class="text-xs text-slate-300 font-medium">${activeExam.title} • <b>${bartenderName}</b> (${restaurantName})</p>
               <div id="exam-sheet-status" class="text-xs font-semibold text-amber-300 pt-1">
                 ⏳ Записываем результат в Google Таблицу...
               </div>
@@ -1185,10 +1425,10 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2.5 pt-1">
-              <button onclick="startCategoryExam('${activeExam.catCode}')" class="py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow">
+              <button onclick="this.blur(); startCategoryExam('${activeExam.catCode}')" class="py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-xs transition shadow">
                 Пройти еще раз 🔄
               </button>
-              <button onclick="activeExam = null; updateHeaderUI(); renderExamView();" class="py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs transition">
+              <button onclick="this.blur(); activeExam = null; updateHeaderUI(); renderExamView();" class="py-3 rounded-xl bg-slate-700 active:bg-slate-600 text-white font-bold text-xs transition">
                 Вернуться в Зачетку 🎓
               </button>
             </div>
@@ -1198,6 +1438,7 @@
         sendResultToServer(
           {
             bartenderName: bartenderName,
+            restaurantName: restaurantName,
             categoryCode: activeExam.catCode,
             modeName: `Экзамен: ${activeExam.title}`,
             correct: correct,
@@ -1208,6 +1449,11 @@
           function(res) {
             const st = document.getElementById('exam-sheet-status');
             if (!st) return;
+            if (res && res.profile) {
+              const key = makeUserKey(bartenderName, restaurantName);
+              serverProfiles[key] = res.profile;
+              localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
+            }
             if (res && res.localOnly) {
               st.textContent = "ℹ️ Результат сохранен на устройстве";
             } else if (res && res.success) {
@@ -1234,7 +1480,7 @@
       const total = activeExam.queue.length;
 
       const optionsHTML = q.options.map((opt, idx) => `
-        <button onclick="answerBlindExam(${idx})" class="w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/90 hover:bg-amber-500/20 hover:border-amber-400 border border-slate-700 text-sm font-medium transition flex items-center justify-between gap-2">
+        <button type="button" onclick="this.blur(); answerBlindExam(${idx})" class="opt-btn w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm font-medium transition flex items-center justify-between gap-2">
           <span class="leading-snug">${opt}</span>
           <span class="text-xs text-slate-500 shrink-0">➡️</span>
         </button>
@@ -1246,7 +1492,7 @@
             <span class="font-bold text-amber-400">🔒 Вопрос ${activeExam.index + 1} из ${total}</span>
             <div class="flex items-center gap-2">
               <span id="exam-timer-badge" class="px-3 py-1 rounded-lg bg-slate-900 text-amber-300 border border-slate-700 font-bold text-xs">⏱ ${q.timeLimitSec} сек</span>
-              <button onclick="cancelActiveExam()" title="Прервать экзамен" class="text-slate-400 hover:text-rose-400 px-1">✖</button>
+              <button type="button" onclick="this.blur(); cancelActiveExam()" title="Прервать экзамен" class="text-slate-400 px-1">✖</button>
             </div>
           </div>
 
@@ -1266,6 +1512,7 @@
 
     // ================= РЕЖИМ 2: ТРЕНИРОВКА С ПОДСКАЗКАМИ =================
     function setQuizFilter(filter) {
+      clearActiveFocus();
       quizFilter = filter;
       ['all', 'qty', 'glass', 'garnish'].forEach(f => {
         document.getElementById(`qf-${f}`).className = f === filter
@@ -1276,6 +1523,7 @@
     }
 
     function generatePracticeQuestion() {
+      clearActiveFocus();
       const pool = getPracticePool();
       const c = pool[Math.floor(Math.random() * pool.length)];
       currentPracticeQ = buildQuestionForItem(c, quizFilter);
@@ -1283,11 +1531,12 @@
     }
 
     function renderPracticeQuestion() {
+      clearActiveFocus();
       if (!currentPracticeQ) generatePracticeQuestion();
       const c = currentPracticeQ.cocktail;
       const container = document.getElementById('practice-container');
       const optionsHTML = currentPracticeQ.options.map((opt, idx) => `
-        <button onclick="answerPractice(${idx})" id="pq-opt-${idx}" class="w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-700/80 border border-slate-700 text-sm font-medium transition flex items-center justify-between gap-2">
+        <button type="button" onclick="this.blur(); answerPractice(${idx})" id="pq-opt-${idx}" class="opt-btn w-full text-left px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm font-medium transition flex items-center justify-between gap-2">
           <span class="leading-snug">${opt}</span>
         </button>
       `).join('');
@@ -1299,7 +1548,7 @@
             <h2 class="text-base font-bold text-white mt-0.5">${getName(c)}</h2>
             <p class="text-xs text-slate-400 mt-0.5">${currentPracticeQ.subText}</p>
           </div>
-          <button onclick="openRenameModal(${c.id})" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-700/70 text-slate-300 shrink-0">✏️</button>
+          <button type="button" onclick="this.blur(); openRenameModal(${c.id})" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-700/70 text-slate-300 shrink-0">✏️</button>
         </div>
         <p class="text-sm font-semibold text-amber-300 bg-slate-900/60 px-3 py-2 rounded-xl border border-slate-700/60">${currentPracticeQ.questionText}</p>
         <div class="space-y-2.5">${optionsHTML}</div>
@@ -1308,6 +1557,7 @@
     }
 
     function answerPractice(idx) {
+      clearActiveFocus();
       if (currentPracticeQ.answered) return;
       currentPracticeQ.answered = true;
       const c = currentPracticeQ.cocktail;
@@ -1341,7 +1591,7 @@
           <div class="text-slate-300"><span class="text-slate-400">Состав:</span> ${ingSummary}</div>
           <div class="text-slate-300"><span class="text-slate-400">Подача/Выход:</span> <b>${c.glass}</b> | <span class="text-slate-400">Декор:</span> <b>${formatGarnishTextOnly(c)}</b></div>
         </div>
-        <button onclick="generatePracticeQuestion()" class="mt-3 w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition shadow">
+        <button type="button" onclick="this.blur(); generatePracticeQuestion()" class="mt-3 w-full py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-sm transition shadow">
           Следующий тренировочный вопрос ➡️
         </button>
       `;
@@ -1356,6 +1606,7 @@
     }
 
     function nextBuilderCocktail() {
+      clearActiveFocus();
       const pool = getPracticePool();
       builderCocktail = pool[Math.floor(Math.random() * pool.length)];
       renderBuilder();
@@ -1386,7 +1637,7 @@
       const quickValues = ['1', '2', '5', '10', '15', '20', '25', '30', '40', '50', '60', '70', '80', '100', '120', '150', '200'];
       const quickBar = `
         <div class="flex flex-wrap gap-1 pt-1">
-          ${quickValues.map(v => `<button type="button" onclick="fillQuickQty('${v}')" class="px-2 py-1 rounded-lg bg-slate-700/80 hover:bg-amber-500 hover:text-slate-950 text-[11px] font-bold text-slate-200 transition">${v}</button>`).join('')}
+          ${quickValues.map(v => `<button type="button" onclick="this.blur(); fillQuickQty('${v}')" class="px-2 py-1 rounded-lg bg-slate-700/80 active:bg-amber-500 active:text-slate-950 text-[11px] font-bold text-slate-200 transition">${v}</button>`).join('')}
         </div>
       `;
 
@@ -1407,7 +1658,7 @@
             <h2 class="text-base font-bold text-white">${getName(c)}</h2>
             <span class="text-xs text-slate-400">${c.method}</span>
           </div>
-          <button onclick="nextBuilderCocktail()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs text-amber-300 font-semibold">Другой 🎲</button>
+          <button type="button" onclick="this.blur(); nextBuilderCocktail()" class="px-3 py-1.5 rounded-lg bg-slate-700 active:bg-slate-600 text-xs text-amber-300 font-semibold">Другой 🎲</button>
         </div>
         <div class="space-y-2">
           <label class="block text-xs text-slate-400 font-medium">1. Введи граммовки или нажимай быстрые кнопки:</label>
@@ -1429,13 +1680,14 @@
           </select>
         </div>
         <div id="builder-result" class="hidden"></div>
-        <button id="builder-submit-btn" onclick="checkBuilder()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition">
+        <button type="button" id="builder-submit-btn" onclick="this.blur(); checkBuilder()" class="w-full py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-sm transition">
           Проверить сборку ТТК ✅
         </button>
       `;
     }
 
     function checkBuilder() {
+      clearActiveFocus();
       const c = builderCocktail;
       let totalChecks = c.ingredients.length + 2;
       let passedChecks = 0;
@@ -1476,7 +1728,7 @@
 
       const btn = document.getElementById('builder-submit-btn');
       btn.textContent = "Следующая ТТК ➡️";
-      btn.onclick = nextBuilderCocktail;
+      btn.onclick = function() { this.blur(); nextBuilderCocktail(); };
     }
 
     // ================= РЕЖИМ 4: КАРТОЧКИ =================
@@ -1491,7 +1743,7 @@
         card.innerHTML = `
           <div class="flex justify-between items-start">
             <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold">${c.catLabel}</span>
-            <button onclick="event.stopPropagation(); openRenameModal(${c.id})" class="text-xs px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300">✏️</button>
+            <button type="button" onclick="event.stopPropagation(); this.blur(); openRenameModal(${c.id})" class="text-xs px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300">✏️</button>
           </div>
           <div class="my-auto text-center space-y-3 py-8">
             <h2 class="text-xl font-extrabold text-white">${getName(c)}</h2>
@@ -1548,7 +1800,7 @@
               <h3 class="text-sm font-bold text-amber-400">${getName(c)}</h3>
               <p class="text-xs text-slate-400">${c.method} • <span class="text-slate-200 font-medium">${c.glass}</span></p>
             </div>
-            <button onclick="setMode('builder'); initBuilder(${c.id})" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-semibold shrink-0">Собрать</button>
+            <button type="button" onclick="this.blur(); setMode('builder'); initBuilder(${c.id})" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-semibold shrink-0">Собрать</button>
           </div>
           <div class="bg-slate-900/80 rounded-xl p-2.5 space-y-1 text-xs">
             ${c.ingredients.map(i => `<div class="flex justify-between"><span class="text-slate-300">${i.name}</span><span class="font-bold text-white">${i.qty} ${i.unit}</span></div>`).join('')}
@@ -1587,7 +1839,6 @@
       renderAll();
     }
 
-    // Проверка: если уже открыто с иконки главного экрана — прячем кнопку "📲 На экран"
     const isStandaloneApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     if (isStandaloneApp) {
       const btn = document.getElementById('install-help-btn');
@@ -1625,7 +1876,8 @@
       else if (currentMode === 'flashcards') renderFlashcard();
       else if (currentMode === 'list') renderList();
     }
-// ================= ГЕНЕРАЦИЯ ИКОНКИ ДЛЯ ГЛАВНОГО ЭКРАНА ТЕЛЕФОНА (iOS & Android) =================
+
+    // ================= ГЕНЕРАЦИЯ ИКОНКИ ДЛЯ ГЛАВНОГО ЭКРАНА =================
     (function setupAppIcon() {
       try {
         const canvas = document.createElement('canvas');
@@ -1633,29 +1885,24 @@
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
-        // 1. Фон иконки (темно-синий в цвет приложения)
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(0, 0, 512, 512);
 
-        // 2. Внутренняя янтарная рамка
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 16;
         ctx.strokeRect(28, 28, 456, 456);
 
-        // 3. Значок коктейля по центру
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = '210px sans-serif';
         ctx.fillText('🍸', 256, 205);
 
-        // 4. Подпись "ТТК БАР" снизу
         ctx.fillStyle = '#fbbf24';
         ctx.font = '900 76px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillText('ТТК БАР', 256, 395);
 
         const iconDataUrl = canvas.toDataURL('image/png');
 
-        // Подключаем иконку для iPhone (Safari -> На экран «Домой») и обычную фавиконку
         ['apple-touch-icon', 'icon'].forEach(rel => {
           let link = document.createElement('link');
           link.rel = rel;
@@ -1663,7 +1910,6 @@
           document.head.appendChild(link);
         });
 
-        // Подключаем PWA-манифест для Android (Chrome -> Добавить на гл. экран)
         const manifest = {
           name: "Тренажер ТТК — Бар",
           short_name: "ТТК Бар",
@@ -1682,9 +1928,12 @@
         document.head.appendChild(manifestLink);
       } catch (e) {}
     })();
+
+    populateRestaurantSelect('', restaurantName);
+    loadCurrentProfileProgress();
     renderAll();
     syncWithGoogleSheet();
-    if (!bartenderName) openUserModal();
+    if (!bartenderName || !restaurantName) openUserModal();
   </script>
 </body>
 </html>
