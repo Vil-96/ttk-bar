@@ -760,7 +760,7 @@
       populateRestaurantSelect(q);
     }
 
-    // Авто-очистка данных из таблицы
+   // Авто-очистка данных из таблицы (единый стандарт посуды и украшений)
     function sanitizeLoadedItems(items) {
       return items.map(item => {
         let g = (item.glass || '').trim();
@@ -771,7 +771,28 @@
         if (/magistro.*260/i.test(g)) g = "Стакан Magistro Грани 260 мл";
         item.glass = g;
 
-        const cleanPart = (obj) => {
+        const cleanGarnishName = (rawName, cat) => {
+          let n = String(rawName || '').trim();
+          if (cat === 'PREP') return n;
+
+          // Убираем дроби и граммовки в скобках в конце названия: "(1/2)", "(0.5)", "(1 шт)"
+          n = n.replace(/\s*\(\s*[\d.,/]+\s*(шт\.?|г|гр|мл|ч\.?\s*л\.?)?\s*\)\s*/gi, ' ').trim();
+
+          // Приводим синонимы украшений к единому стандарту
+          if (/чипс.*апельсин|апельсин.*чипс/i.test(n)) return "Апельсиновый чипс";
+          if (/чипс.*лимон|лимон.*чипс/i.test(n)) return "Лимонный чипс";
+          if (/лист.*базилик|базилик.*лист|базилик\s+свеж/i.test(n)) return "Лист базилика";
+          if (/круж.*лайм|лайм.*круж|дольк.*лайм|лайм.*дольк/i.test(n)) return "Лайм кружок";
+          if (/круж.*лимон|лимон.*круж|дольк.*лимон/i.test(n)) return "Лимон кружок";
+          if (/полукруг.*апельсин|апельсин.*полукруг|дольк.*апельсин/i.test(n)) return "Апельсин полукруг";
+          if (/полукруг.*лимон|лимон.*полукруг/i.test(n)) return "Лимон полукруг";
+          if (/сублим.*клубник|клубник.*сублим/i.test(n)) return "Клубника сублим.";
+          if (/леденец.*изомальт|изомальт.*леденец/i.test(n)) return "Изомальтовый леденец";
+
+          return n.replace(/\s+/g, ' ');
+        };
+
+        const cleanPart = (obj, isGarnish) => {
           let q = String(obj.qty || '').trim();
           let u = String(obj.unit || '').trim();
           const m = q.match(/^([\d.,]+)\s*(г|гр|мл|шт\.?|кап\.?|вет\.?|ч)$/i);
@@ -780,15 +801,16 @@
             u = m[2].replace('.', '');
           }
           u = u.replace(/^(г|гр|шт|кап|вет)\s+мл$/i, '$1');
-          return { name: String(obj.name || '').trim(), qty: q, unit: u };
+          let cleanName = String(obj.name || '').trim();
+          if (isGarnish) cleanName = cleanGarnishName(cleanName, item.cat);
+          return { name: cleanName, qty: q, unit: u };
         };
 
-        item.ingredients = (item.ingredients || []).map(cleanPart);
-        item.garnish = (item.garnish || []).map(cleanPart);
+        item.ingredients = (item.ingredients || []).map(p => cleanPart(p, false));
+        item.garnish = (item.garnish || []).map(p => cleanPart(p, true));
         return item;
       });
     }
-
     // Универсальная синхронизация с Google Таблицей (ТТК + Облачные профили сотрудников)
     function syncWithGoogleSheet() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -919,16 +941,25 @@
       }).join(' + ');
     }
 
+    // Умное сравнение ответов: убирает скобки с цифрами, окончания и порядок слов
     function normalizeForCompare(str) {
       return String(str || '')
         .toLowerCase()
-        .replace(/[«»"'(),.-]/g, ' ')
+        // Убираем скобки с цифрами/дробями вроде (1/2) или (2 шт)
+        .replace(/\([^)]*\d[^)]*\)/g, ' ')
+        .replace(/[«»"'(),.+:-]/g, ' ')
         .replace(/коктейлей/g, 'коктейля')
+        .replace(/апельсиновый|апельсина|апельсин/g, 'апельсин')
+        .replace(/лимонный|лимона|лимон/g, 'лимон')
+        .replace(/лаймовый|лайма|лайм/g, 'лайм')
+        .replace(/изомальтовый|изомальта|изомальт/g, 'изомальт')
         .replace(/полукружка|полукруга/g, 'полукруг')
         .replace(/кружка|круг/g, 'кружок')
-        .replace(/листочек|листок/g, 'лист')
-        .replace(/\s+/g, ' ')
-        .trim();
+        .replace(/листочек|листок|листья|листик/g, 'лист')
+        .split(/\s+/)
+        .filter(Boolean)
+        .sort() // Сортируем слова по алфавиту, чтобы "Чипс апельсина" == "Апельсиновый чипс"
+        .join(' ');
     }
 
     function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
@@ -1928,7 +1959,7 @@
         document.head.appendChild(manifestLink);
       } catch (e) {}
     })();
-
+allItems = sanitizeLoadedItems(allItems);
     populateRestaurantSelect('', restaurantName);
     loadCurrentProfileProgress();
     renderAll();
