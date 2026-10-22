@@ -262,6 +262,7 @@
   </div>
 
   <script>
+    // === ВАЖНО: ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ APPS SCRIPT WEB APP ===
     const EXTERNAL_API_URL = "https://script.google.com/macros/s/AKfycby6tvIOQJYgkaa1OxnBIhe9guhDfxC9kejXsQZ6UmUAfW5T5GRLBYVAVFDE47qqqwcNgQ/exec";
 
     const PASS_THRESHOLD = 85;
@@ -1097,7 +1098,7 @@
     function updateHeaderUI() {
       const badgeName = document.getElementById('bartender-name-badge');
       if (bartenderName && restaurantName) {
-        badgeName.textContent = `${bartenderName} • ${restaurantName}`;
+        badgeName.textContent = `${bartenderName} | ${restaurantName}`;
       } else if (bartenderName) {
         badgeName.textContent = bartenderName;
       } else {
@@ -1254,7 +1255,7 @@
 
       let questionText = '';
       let shortLabel = '';
-      let subText = `${c.catLabel} • ${c.method}`;
+      let subText = `${c.catLabel} | ${c.method}`;
       let correctAnswer = '';
       let options = [];
 
@@ -1518,7 +1519,7 @@
                 ${passed ? '✅ ЗАЧЕТ УСПЕШНО СДАН!' : `❌ НА ПЕРЕСДАЧУ (НУЖНО МИНИМУМ ${PASS_THRESHOLD}%)`}
               </div>
               <h2 class="text-2xl font-extrabold text-white">${pct}% (${correct} из ${total})</h2>
-              <p class="text-xs text-slate-300 font-medium">${activeExam.title} • <b>${bartenderName}</b> (${restaurantName})</p>
+              <p class="text-xs text-slate-300 font-medium">${activeExam.title} <b>${bartenderName}</b> (${restaurantName})</p>
               <div id="exam-sheet-status" class="text-xs font-semibold text-amber-300 pt-1">
                 ⏳ Записываем результат в Google Таблицу...
               </div>
@@ -1898,7 +1899,7 @@
             <div>
               <span class="text-[10px] text-slate-400 uppercase font-bold">${c.catLabel}</span>
               <h3 class="text-sm font-bold text-amber-400">${getName(c)}</h3>
-              <p class="text-xs text-slate-400">${c.method} • <span class="text-slate-200 font-medium">${c.glass}</span></p>
+              <p class="text-xs text-slate-400">${c.method} <span class="text-slate-200 font-medium">${c.glass}</span></p>
             </div>
             <button type="button" onclick="this.blur(); setMode('builder'); initBuilder(${c.id})" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-semibold shrink-0">Собрать</button>
           </div>
