@@ -20,7 +20,6 @@
       opacity: 0.35;
       cursor: not-allowed;
     }
-    /* Полностью убираем залипание фокуса и подсветки кнопок на телефонах */
     button:focus, button:focus-visible {
       outline: none !important;
       box-shadow: none !important;
@@ -37,7 +36,6 @@
 </head>
 <body class="min-h-screen flex flex-col pb-20">
 
-  <!-- Всплывающее уведомление -->
   <div id="toast-alert" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-rose-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-rose-400 transition-all text-center max-w-xs"></div>
 
   <!-- Шапка -->
@@ -54,10 +52,14 @@
             <span class="text-[10px] text-slate-400">✏️</span>
           </button>
 
-          <!-- Кнопка подсказки установки на главный экран -->
           <button id="install-help-btn" onclick="this.blur(); openInstallModal()" class="flex items-center gap-1 text-xs text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/40 font-semibold">
             <span>📲</span>
             <span>На экран</span>
+          </button>
+
+          <button onclick="this.blur(); openChangelogModal()" title="Что обновилось в приложении" class="flex items-center gap-1 text-xs text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/40 font-semibold">
+            <span>🚀</span>
+            <span>Что нового</span>
           </button>
         </div>
       </div>
@@ -82,15 +84,11 @@
     </div>
   </div>
 
-  <!-- Основной контейнер -->
   <main class="max-w-xl mx-auto w-full px-4 py-3 flex-1 space-y-3">
-
-    <!-- РЕЖИМ 1: ЗАЧЕТКА И СЛЕПОЙ ЭКЗАМЕН С ТАЙМЕРОМ -->
     <section id="view-exam" class="space-y-3">
       <div id="exam-container"></div>
     </section>
 
-    <!-- Блок выбора категории (для Тренировки, Сборки, Карточек и Базы) -->
     <div id="shared-category-bar" class="hidden space-y-1.5">
       <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Фильтр раздела:</div>
       <div class="flex flex-wrap gap-1.5 text-xs">
@@ -105,7 +103,6 @@
       </div>
     </div>
 
-    <!-- РЕЖИМ 2: ТРЕНИРОВКА С ПОДСКАЗКАМИ -->
     <section id="view-practice" class="hidden space-y-3">
       <div class="flex flex-wrap gap-1.5 text-xs">
         <button onclick="this.blur(); setQuizFilter('all')" id="qf-all" class="px-3 py-1 rounded-full bg-slate-700 text-amber-300 font-semibold border border-amber-500/40">Все вопросы</button>
@@ -116,12 +113,10 @@
       <div id="practice-container" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4"></div>
     </section>
 
-    <!-- РЕЖИМ 3: СБОРКА ТТК -->
     <section id="view-builder" class="hidden space-y-4">
       <div id="builder-container" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4"></div>
     </section>
 
-    <!-- РЕЖИМ 4: ФЛЕШ-КАРТОЧКИ -->
     <section id="view-flashcards" class="hidden space-y-3">
       <div class="flex items-center justify-between text-xs text-slate-400">
         <span id="fc-counter">Карточка 1</span>
@@ -134,7 +129,6 @@
       </div>
     </section>
 
-    <!-- РЕЖИМ 5: СПИСОК ВСЕХ ТТК -->
     <section id="view-list" class="hidden space-y-3">
       <div class="flex gap-2">
         <input type="text" id="search-input" oninput="renderList()" placeholder="Поиск по названию, ингредиенту или бокалу..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400" />
@@ -142,7 +136,6 @@
       </div>
       <div id="list-container" class="space-y-3"></div>
     </section>
-
   </main>
 
   <!-- Модальное окно идентификации сотрудника (Имя + Ресторан) -->
@@ -150,24 +143,72 @@
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div>
         <h3 class="text-base font-bold text-amber-400">👤 Вход в личную Зачетку</h3>
-        <p class="text-xs text-slate-300 mt-1">Введи имя и выбери свой ресторан. По этой связке твой прогресс сохраняется в таблице — при входе с любого телефона все твои сданные зачеты автоматически восстановятся!</p>
+        <p class="text-xs text-slate-300 mt-1">Введи имя и выбери свой ресторан. По этой связке твой прогресс сохраняется в облаке — при входе с любого телефона все твои сданные зачеты автоматически восстановятся!</p>
       </div>
-
       <div class="space-y-3">
         <div>
           <label class="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1">1. Имя и Фамилия:</label>
           <input type="text" id="user-name-input" placeholder="Например: Виль" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
         </div>
-
         <div>
           <label class="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1">2. Выбери ресторан / точку:</label>
-          <!-- Быстрый фильтр по списку ресторанов -->
           <input type="text" id="restaurant-filter-input" oninput="filterRestaurantSelect()" placeholder="🔍 Быстрый поиск (например: Навагинская)..." class="w-full bg-slate-900/70 border border-slate-700/80 rounded-t-xl px-3.5 py-2 text-xs text-amber-300 placeholder-slate-500 focus:outline-none focus:border-amber-400 border-b-0" />
           <select id="user-restaurant-select" class="w-full bg-slate-900 border border-slate-700 rounded-b-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"></select>
         </div>
       </div>
-
       <button onclick="this.blur(); saveUserName()" class="w-full py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg">Сохранить и загрузить Зачетку ➡️</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно "Что нового / Важно" (Динамическое из Таблицы + Редактор по ПИН-коду) -->
+  <div id="changelog-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="changelog-card-wrapper" class="bg-slate-800 border-2 border-amber-500/70 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-2.5">
+        <div>
+          <span id="changelog-badge-text" class="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold">Обновление по вашим отзывам</span>
+          <h3 id="changelog-title-text" class="text-base font-extrabold text-amber-400">🚀 Что нового в тренажёре ТТК</h3>
+        </div>
+        <div class="flex items-center gap-1">
+          <button onclick="this.blur(); openAdminAnnounceModal()" title="Изменить объявление (пин 2296)" class="text-xs px-2 py-1 rounded bg-slate-700 text-amber-300">⚙️</button>
+          <button onclick="this.blur(); closeChangelogModal()" class="text-slate-400 text-sm px-1">✖</button>
+        </div>
+      </div>
+
+      <div id="changelog-content-container" class="space-y-2.5 text-xs text-slate-200">
+        <!-- Сюда динамически подгружаются пункты из таблицы/сервера -->
+      </div>
+
+      <button onclick="this.blur(); closeChangelogModal()" class="w-full py-3 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-extrabold text-sm shadow-lg">
+        Всё понятно, погнали! 👍
+      </button>
+    </div>
+  </div>
+
+  <!-- Модальное окно админ-редактора объявлений по ПИН-коду -->
+  <div id="admin-announce-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-rose-500/60 rounded-2xl max-w-md w-full p-5 space-y-3.5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-sm font-bold text-rose-400">⚙️ Редактор объявлений сети</h3>
+        <button onclick="this.blur(); closeAdminAnnounceModal()" class="text-slate-400 text-sm">✖</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 font-bold mb-1">Режим уведомления:</label>
+          <select id="admin-ann-type" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            <option value="info">🚀 Что нового (обычное)</option>
+            <option value="alert">🔥 Важно! (срочное / тревожное)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-400 font-bold mb-1">Текст объявления (каждая строка — отдельный пункт):</label>
+          <textarea id="admin-ann-text" rows="6" placeholder="Введи пункты..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-rose-400 text-xs"></textarea>
+        </div>
+        <div>
+          <label class="block text-slate-400 font-bold mb-1">ПИН-код администратора:</label>
+          <input type="password" id="admin-ann-pin" placeholder="Введите пин (2296)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-400" />
+        </div>
+      </div>
+      <button onclick="this.blur(); publishNewAnnouncement()" class="w-full py-2.5 rounded-xl bg-rose-600 active:bg-rose-500 text-white font-bold text-xs shadow-lg">Опубликовать для всех точек 🚀</button>
     </div>
   </div>
 
@@ -190,12 +231,10 @@
         <h3 class="text-base font-bold text-amber-400">📲 Как добавить иконку на телефон</h3>
         <button onclick="this.blur(); closeInstallModal()" class="text-slate-400 text-sm px-1">✖</button>
       </div>
-
       <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 space-y-1">
         <div class="font-bold text-amber-400">⚠️ Шаг 0: Если открыли в Telegram / WhatsApp</div>
         <div>Нажмите <b>«•••»</b> (или значок компаса/стрелки в углу) и выберите <b>«Открыть в браузере»</b> (Safari или Chrome). Иначе кнопки установки не будет!</div>
       </div>
-
       <div id="inst-ios" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1.5 text-xs">
         <div class="font-bold text-white text-sm flex items-center justify-between">
           <span>🍎 Для iPhone (в браузере Safari)</span>
@@ -207,7 +246,6 @@
           <li>В правом верхнем углу нажмите <b>«Добавить»</b>.</li>
         </ol>
       </div>
-
       <div id="inst-android" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 space-y-1.5 text-xs">
         <div class="font-bold text-white text-sm flex items-center justify-between">
           <span>🤖 Для Android (в браузере Chrome)</span>
@@ -218,120 +256,53 @@
           <li>Выберите <b>«Добавить на главный экран»</b> (или <b>«Установить приложение»</b>).</li>
           <li>Нажмите <b>«Добавить»</b>.</li>
         </ol>
-        <div class="pt-1 text-[11px] text-slate-400 border-t border-slate-800">
-          💡 <b>Для Xiaomi / POCO:</b> если ярлык не появился, включите разрешение: <i>Настройки ➡️ Приложения ➡️ Chrome ➡️ Разрешения ➡️ Ярлыки рабочего стола</i>.
-        </div>
       </div>
-
       <button onclick="this.blur(); closeInstallModal()" class="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">Понятно, спасибо!</button>
     </div>
   </div>
 
   <script>
-    // =========================================================================
-    // ✅ ССЫЛКА НА ВЕБ-ПРИЛОЖЕНИЕ GOOGLE APPS SCRIPT:
     const EXTERNAL_API_URL = "https://script.google.com/macros/s/AKfycby6tvIOQJYgkaa1OxnBIhe9guhDfxC9kejXsQZ6UmUAfW5T5GRLBYVAVFDE47qqqwcNgQ/exec";
-    // =========================================================================
 
     const PASS_THRESHOLD = 85;
     const SHORT_QUESTION_SEC = 30;
     const LONG_QUESTION_SEC = 45;
-    const DATA_VERSION = 'v7_user_profiles_2026';
+    const DATA_VERSION = 'v8_clean_garnish_2026';
 
-    // Полный список ресторанов по регионам
+    let currentAnnouncement = {
+      type: "info",
+      version: "v8_default_2026",
+      text: "⏱ Спокойный динамический таймер: 30 сек на короткие вопросы и 45 сек на длинные.\n🍊 Короткие ответы по украшениям: убраны лишние граммовки и дубли.\n📋 Понятные карточки разбора ошибок в конце теста.\n👤 Сохранение Зачетки в облаке по Имени и Ресторану (59 точек).\n⚡️ Исправлено залипание кнопок на телефонах."
+    };
+
     const RESTAURANT_GROUPS = [
       {
         group: "Краснодар",
-        items: [
-          "Краснодар 1 Мая",
-          "Краснодар Дальний 3",
-          "Краснодар Западный обход",
-          "Краснодар Карякина",
-          "Краснодар Красная 109",
-          "Краснодар Красная 41",
-          "Краснодар Любимово",
-          "Краснодар Московская 170",
-          "Краснодар ТЦ Сыр",
-          "Краснодар Чекистов 15/1"
-        ]
+        items: ["Краснодар 1 Мая", "Краснодар Дальний 3", "Краснодар Западный обход", "Краснодар Карякина", "Краснодар Красная 109", "Краснодар Красная 41", "Краснодар Любимово", "Краснодар Московская 170", "Краснодар ТЦ Сыр", "Краснодар Чекистов 15/1"]
       },
       {
         group: "Парус Краснодарский край",
-        items: [
-          "Армавир",
-          "Белореченск",
-          "Ейск",
-          "Каневская",
-          "Кропоткин",
-          "Ставрополь",
-          "Тихорецк"
-        ]
+        items: ["Армавир", "Белореченск", "Ейск", "Каневская", "Кропоткин", "Ставрополь", "Тихорецк"]
       },
       {
         group: "Побережье",
-        items: [
-          "Анапа",
-          "Геленджик",
-          "Липецк Советская",
-          "Липецк Шуминского",
-          "Новороссийск Видова",
-          "Новороссийск Губернского",
-          "Новороссийск ТЦ Черноморский",
-          "Новороссийск Южная 26",
-          "Сочи Адлер",
-          "Сочи Навагинская",
-          "Сочи Учительская 6/2"
-        ]
+        items: ["Анапа", "Геленджик", "Липецк Советская", "Липецк Шуминского", "Новороссийск Видова", "Новороссийск Губернского", "Новороссийск ТЦ Черноморский", "Новороссийск Южная 26", "Сочи Адлер", "Сочи Навагинская", "Сочи Учительская 6/2"]
       },
       {
         group: "Ростовская обл",
-        items: [
-          "Азов",
-          "Аксай",
-          "Батайск Воровского",
-          "Батайск Энгельса",
-          "Новочеркасск",
-          "Ростов-нД Б.Садовая",
-          "Ростов-нД Богданова 71",
-          "Ростов-нД Шолохова",
-          "Таганрог",
-          "Шахты"
-        ]
+        items: ["Азов", "Аксай", "Батайск Воровского", "Батайск Энгельса", "Новочеркасск", "Ростов-нД Б.Садовая", "Ростов-нД Богданова 71", "Ростов-нД Шолохова", "Таганрог", "Шахты"]
       },
       {
         group: "Ростов-на-Дону",
-        items: [
-          "Ростов-нД Буденновский",
-          "Ростов-нД Вересаево",
-          "Ростов-нД Зорге",
-          "Ростов-нД Комарова",
-          "Ростов-нД Коммунистический 30",
-          "Ростов-нД Космонавтов",
-          "Ростов-нД Курсантов 224",
-          "Ростов-нД Ленина",
-          "Ростов-нД Нагибина",
-          "Ростов-нД Петренко",
-          "Ростов-нД Пушкинская"
-        ]
+        items: ["Ростов-нД Буденновский", "Ростов-нД Вересаево", "Ростов-нД Зорге", "Ростов-нД Комарова", "Ростов-нД Коммунистический 30", "Ростов-нД Космонавтов", "Ростов-нД Курсантов 224", "Ростов-нД Ленина", "Ростов-нД Нагибина", "Ростов-нД Петренко", "Ростов-нД Пушкинская"]
       },
       {
         group: "Станицы Пицца",
-        items: [
-          "Горячий Ключ",
-          "Кореновск Красная",
-          "Крымск",
-          "Ленинградская",
-          "Майкоп",
-          "Славянск-на-Кубани",
-          "Тимашевск",
-          "Усть-Лабинск"
-        ]
+        items: ["Горячий Ключ", "Кореновск Красная", "Крымск", "Ленинградская", "Майкоп", "Славянск-на-Кубани", "Тимашевск", "Усть-Лабинск"]
       },
       {
         group: "Франчайзи",
-        items: [
-          "Абакан"
-        ]
+        items: ["Абакан"]
       }
     ];
 
@@ -348,7 +319,6 @@
     const MAIN_STATIONS = ["ALC", "NA", "COFFEE", "TEA", "KIDS", "PREP"];
 
     let allItems = [
-      // ================= 1. АЛКОГОЛЬНЫЕ КОКТЕЙЛИ (24) =================
       { id: 1, cat: "ALC", catLabel: "🍸 Алк. коктейли", defaultName: "Фиеро спритц", method: "Основа в бокал", glass: "Бокал Мартини",
         ingredients: [{ name: "Матрини фиеро", qty: "60", unit: "мл" }, { name: "Содовая", qty: "30", unit: "мл" }, { name: "Игристое кокт.", qty: "60", unit: "мл" }],
         garnish: [{ name: "Апельсин", qty: "30", unit: "г" }] },
@@ -446,7 +416,7 @@
         garnish: [{ name: "Лайм кружок", qty: "10", unit: "г" }, { name: "Мята", qty: "1", unit: "г" }] },
       { id: 32, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лимонад Базилик-клубника", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
         ingredients: [{ name: "Пюре Клубника", qty: "30", unit: "мл" }, { name: "Кордиал Базилик", qty: "25", unit: "мл" }, { name: "Содовая", qty: "135", unit: "мл" }],
-        garnish: [{ name: "Базилик", qty: "1", unit: "г" }, { name: "Клубника сублим.", qty: "0,5", unit: "г" }] },
+        garnish: [{ name: "Лист базилика", qty: "1", unit: "г" }, { name: "Клубника сублим.", qty: "0,5", unit: "г" }] },
       { id: 33, cat: "NA", catLabel: "🥤 Б/А и лимонады", defaultName: "Лавандовый лимонад", method: "Основа в бокал", glass: "Стакан рифлёный 450 мл",
         ingredients: [{ name: "Кордиал Лаванда", qty: "60", unit: "мл" }, { name: "Суперджус лимон", qty: "15", unit: "мл" }, { name: "Содовая", qty: "130", unit: "мл" }],
         garnish: [{ name: "Лимон кружок", qty: "2", unit: "шт" }] },
@@ -528,7 +498,7 @@
         garnish: [{ name: "Ежевика с/м", qty: "10", unit: "г" }, { name: "Смородина с/м", qty: "10", unit: "г" }, { name: "Клубника с/м", qty: "20", unit: "г" }] },
       { id: 58, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай клубника-базилик", method: "Основа в кружку", glass: "Кружка Grace 350 мл",
         ingredients: [{ name: "Пюре Клубника", qty: "40", unit: "мл" }, { name: "Кордиал Базилик", qty: "30", unit: "мл" }, { name: "ПФ Чай Каркаде", qty: "150", unit: "мл" }, { name: "Горячая вода", qty: "80", unit: "мл" }],
-        garnish: [{ name: "Базилик свежий", qty: "1", unit: "г" }, { name: "Клубника с/м", qty: "20", unit: "г" }] },
+        garnish: [{ name: "Лист базилика", qty: "1", unit: "г" }, { name: "Клубника с/м", qty: "20", unit: "г" }] },
       { id: 59, cat: "TEA", catLabel: "🫖 Чаи и Глинтвейны", defaultName: "Чай ананас-клубника", method: "Основа в чайник", glass: "Стеклянный чайник",
         ingredients: [{ name: "ПФ Чай Жасмин", qty: "100", unit: "мл" }, { name: "Пюре Клубника", qty: "60", unit: "мл" }, { name: "Горячая вода", qty: "225", unit: "мл" }, { name: "Ананасовый сок", qty: "100", unit: "мл" }, { name: "Сахарный сироп", qty: "15", unit: "мл" }],
         garnish: [{ name: "Тимьян", qty: "1", unit: "г" }, { name: "Клубника с/м", qty: "30", unit: "г" }] },
@@ -569,7 +539,7 @@
         garnish: [{ name: "Маршмеллоу цветной на шпажке", qty: "1", unit: "шт" }] },
       { id: 71, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Бабл мохито", method: "Основа в бокал", glass: "Банка Сап",
         ingredients: [{ name: "Джус-боллы", qty: "40", unit: "г" }, { name: "Кордиал Мохито", qty: "50", unit: "мл" }, { name: "Содовая", qty: "120", unit: "мл" }, { name: "Лёд", qty: "250", unit: "г" }],
-        garnish: [{ name: "Лайм", qty: "10", unit: "г" }, { name: "Мята", qty: "0,5", unit: "г" }, { name: "Джус-боллы", qty: "5", unit: "г" }] },
+        garnish: [{ name: "Лайм кружок", qty: "10", unit: "г" }, { name: "Мята", qty: "0,5", unit: "г" }, { name: "Джус-боллы", qty: "5", unit: "г" }] },
       { id: 72, cat: "KIDS", catLabel: "🧸 Детское меню", defaultName: "Ёжик Фур-фур", method: "Блендер", glass: "Стакан «Ёжик»",
         ingredients: [{ name: "Молоко", qty: "140", unit: "мл" }, { name: "Мороженое", qty: "80", unit: "г" }, { name: "Шоколадный топпинг", qty: "20", unit: "г" }],
         garnish: [{ name: "Взбитые сливки", qty: "35", unit: "г" }, { name: "Готовый завтрак (уши)", qty: "2", unit: "г" }, { name: "Шоколадный топпинг", qty: "5", unit: "г" }, { name: "Вафельные трубочки", qty: "2", unit: "шт" }, { name: "Грибочки Чоко-бой", qty: "2", unit: "шт" }] },
@@ -687,7 +657,117 @@
       return `${n}|${r}`;
     }
 
-    // Загрузка прогресса конкретного сотрудника (из локальной памяти + авто-восстановление из Google Таблицы)
+    function checkAndShowChangelogOnce() {
+      const lastSeenVer = localStorage.getItem('ttk_seen_announcement_version');
+      if (lastSeenVer !== currentAnnouncement.version) {
+        renderChangelogModalContent();
+        document.getElementById('changelog-modal').classList.remove('hidden');
+      }
+    }
+
+    function openChangelogModal() {
+      if (isExamInProgress()) {
+        showToast('🔒 Заверши текущий билет!');
+        return;
+      }
+      renderChangelogModalContent();
+      document.getElementById('changelog-modal').classList.remove('hidden');
+    }
+
+    function closeChangelogModal() {
+      localStorage.setItem('ttk_seen_announcement_version', currentAnnouncement.version);
+      document.getElementById('changelog-modal').classList.add('hidden');
+    }
+
+    function openAdminAnnounceModal() {
+      const pin = prompt("Введите ПИН-код администратора:");
+      if (pin !== "2296") {
+        if (pin !== null) alert("Неверный ПИН-код!");
+        return;
+      }
+      document.getElementById('admin-ann-type').value = currentAnnouncement.type || 'info';
+      document.getElementById('admin-ann-text').value = currentAnnouncement.text || '';
+      document.getElementById('admin-ann-pin').value = '';
+      document.getElementById('admin-announce-modal').classList.remove('hidden');
+    }
+
+    function closeAdminAnnounceModal() {
+      document.getElementById('admin-announce-modal').classList.add('hidden');
+    }
+
+    function publishNewAnnouncement() {
+      const type = document.getElementById('admin-ann-type').value;
+      const text = document.getElementById('admin-ann-text').value.trim();
+      const pin = document.getElementById('admin-ann-pin').value.trim();
+
+      if (!text) return alert('Введите текст объявления!');
+      if (pin !== "2296") return alert('Неверный ПИН-код!');
+
+      const payload = { action: "saveAnnouncement", type: type, text: text, pin: pin };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          if (res && res.success) {
+            currentAnnouncement = res.announcement;
+            closeAdminAnnounceModal();
+            renderChangelogModalContent();
+            document.getElementById('changelog-modal').classList.remove('hidden');
+            showToast('✅ Объявление опубликовано для всех!');
+          } else {
+            alert(res.error || 'Ошибка публикации');
+          }
+        }).saveSharedAnnouncement(type, text, pin);
+      } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
+        fetch(EXTERNAL_API_URL.trim(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+          if (res && res.success) {
+            currentAnnouncement = res.announcement;
+            closeAdminAnnounceModal();
+            renderChangelogModalContent();
+            document.getElementById('changelog-modal').classList.remove('hidden');
+            showToast('✅ Объявление опубликовано для всех!');
+          } else {
+            alert(res.error || 'Ошибка публикации');
+          }
+        })
+        .catch(() => alert('Ошибка сети'));
+      }
+    }
+
+    function renderChangelogModalContent() {
+      const container = document.getElementById('changelog-content-container');
+      const wrapper = document.getElementById('changelog-card-wrapper');
+      const badgeText = document.getElementById('changelog-badge-text');
+      const titleText = document.getElementById('changelog-title-text');
+
+      if (currentAnnouncement.type === 'alert') {
+        wrapper.className = "bg-slate-800 border-2 border-rose-500 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto";
+        badgeText.className = "text-[10px] uppercase tracking-wider text-rose-400 font-extrabold";
+        badgeText.textContent = "⚠️ Срочное оповещение сети";
+        titleText.className = "text-base font-extrabold text-rose-400";
+        titleText.textContent = "🔥 Внимание! Важная информация";
+      } else {
+        wrapper.className = "bg-slate-800 border-2 border-amber-500/70 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto";
+        badgeText.className = "text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold";
+        badgeText.textContent = "Обновление тренажёра";
+        titleText.className = "text-base font-extrabold text-amber-400";
+        titleText.textContent = "🚀 Что нового в ТТК";
+      }
+
+      const lines = currentAnnouncement.text.split('\n').filter(l => l.trim() !== '');
+      container.innerHTML = lines.map(line => `
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex gap-2.5 items-start">
+          <span class="text-base shrink-0">📌</span>
+          <div class="text-slate-200 leading-snug">${line}</div>
+        </div>
+      `).join('');
+    }
+
     function loadCurrentProfileProgress() {
       if (!bartenderName) {
         examProgress = {};
@@ -698,11 +778,9 @@
       const localSaved = JSON.parse(localStorage.getItem(`ttk_prog_${key}`) || '{}');
       const localWeak = JSON.parse(localStorage.getItem(`ttk_weak_${key}`) || '[]');
 
-      // Проверяем, есть ли этот сотрудник в облачном "Табеле аттестации"
       const cloudProfile = serverProfiles[key] || serverProfiles[makeUserKey(bartenderName, '')];
       const cloudProg = (cloudProfile && cloudProfile.progress) ? cloudProfile.progress : {};
 
-      // Объединяем локальный и облачный прогресс (чтобы при входе с нового телефона всё вернулось!)
       examProgress = { ...localSaved };
       Object.keys(cloudProg).forEach(cat => {
         if (!examProgress[cat] || cloudProg[cat].pct >= examProgress[cat].pct) {
@@ -721,7 +799,6 @@
       localStorage.setItem(`ttk_weak_${key}`, JSON.stringify(weakItems));
     }
 
-    // Заполнение выпадающего списка ресторанов с быстрым фильтром
     function populateRestaurantSelect(filterText = '', selectedVal = '') {
       const sel = document.getElementById('user-restaurant-select');
       if (!sel) return;
@@ -749,7 +826,6 @@
       });
 
       sel.innerHTML = html;
-      // Если по поиску остался ровно 1 ресторан — выбираем его автоматически
       if (q && matchCount === 1) {
         sel.value = lastMatchedItem;
       }
@@ -760,7 +836,6 @@
       populateRestaurantSelect(q);
     }
 
-   // Авто-очистка данных из таблицы (единый стандарт посуды и украшений)
     function sanitizeLoadedItems(items) {
       return items.map(item => {
         let g = (item.glass || '').trim();
@@ -774,11 +849,7 @@
         const cleanGarnishName = (rawName, cat) => {
           let n = String(rawName || '').trim();
           if (cat === 'PREP') return n;
-
-          // Убираем дроби и граммовки в скобках в конце названия: "(1/2)", "(0.5)", "(1 шт)"
           n = n.replace(/\s*\(\s*[\d.,/]+\s*(шт\.?|г|гр|мл|ч\.?\s*л\.?)?\s*\)\s*/gi, ' ').trim();
-
-          // Приводим синонимы украшений к единому стандарту
           if (/чипс.*апельсин|апельсин.*чипс/i.test(n)) return "Апельсиновый чипс";
           if (/чипс.*лимон|лимон.*чипс/i.test(n)) return "Лимонный чипс";
           if (/лист.*базилик|базилик.*лист|базилик\s+свеж/i.test(n)) return "Лист базилика";
@@ -788,7 +859,6 @@
           if (/полукруг.*лимон|лимон.*полукруг/i.test(n)) return "Лимон полукруг";
           if (/сублим.*клубник|клубник.*сублим/i.test(n)) return "Клубника сублим.";
           if (/леденец.*изомальт|изомальт.*леденец/i.test(n)) return "Изомальтовый леденец";
-
           return n.replace(/\s+/g, ' ');
         };
 
@@ -811,7 +881,7 @@
         return item;
       });
     }
-    // Универсальная синхронизация с Google Таблицей (ТТК + Облачные профили сотрудников)
+
     function syncWithGoogleSheet() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(function(sheetItems) {
@@ -822,14 +892,20 @@
           renderAll();
         }).getItemsFromSheetIfAvailable();
 
-        google.script.run.withSuccessHandler(function(profiles) {
-          if (profiles && typeof profiles === 'object') {
-            serverProfiles = profiles;
-            localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
-            loadCurrentProfileProgress();
+        google.script.run.withSuccessHandler(function(data) {
+          if (data) {
+            if (data.profiles && typeof data.profiles === 'object') {
+              serverProfiles = data.profiles;
+              localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
+              loadCurrentProfileProgress();
+            }
+            if (data.announcement) {
+              currentAnnouncement = data.announcement;
+            }
             renderAll();
+            if (bartenderName && restaurantName) checkAndShowChangelogOnce();
           }
-        }).getAllUserProfiles();
+        }).getAllUserProfiles(); // Или отдельный метод, но doGet отдает всё вместе
       } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
         const url = EXTERNAL_API_URL.trim() + (EXTERNAL_API_URL.includes('?') ? '&' : '?') + 'action=getInitData';
         fetch(url)
@@ -850,7 +926,11 @@
               localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
               loadCurrentProfileProgress();
             }
+            if (data && data.announcement) {
+              currentAnnouncement = data.announcement;
+            }
             renderAll();
+            if (bartenderName && restaurantName) checkAndShowChangelogOnce();
           })
           .catch(() => {});
       }
@@ -941,11 +1021,9 @@
       }).join(' + ');
     }
 
-    // Умное сравнение ответов: убирает скобки с цифрами, окончания и порядок слов
     function normalizeForCompare(str) {
       return String(str || '')
         .toLowerCase()
-        // Убираем скобки с цифрами/дробями вроде (1/2) или (2 шт)
         .replace(/\([^)]*\d[^)]*\)/g, ' ')
         .replace(/[«»"'(),.+:-]/g, ' ')
         .replace(/коктейлей/g, 'коктейля')
@@ -958,13 +1036,12 @@
         .replace(/листочек|листок|листья|листик/g, 'лист')
         .split(/\s+/)
         .filter(Boolean)
-        .sort() // Сортируем слова по алфавиту, чтобы "Чипс апельсина" == "Апельсиновый чипс"
+        .sort()
         .join(' ');
     }
 
     function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-    // ================= СПОКОЙНЫЙ ДИНАМИЧЕСКИЙ ТАЙМЕР (30 / 45 СЕК) =================
     function stopQuestionTimer() {
       if (examTimerId) {
         clearInterval(examTimerId);
@@ -993,9 +1070,7 @@
     function updateTimerUI() {
       const badge = document.getElementById('exam-timer-badge');
       if (!badge) return;
-
       badge.textContent = `⏱ ${timeLeftSec} сек`;
-
       if (timeLeftSec <= 7) {
         badge.className = "px-3 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold text-xs";
       } else {
@@ -1076,6 +1151,8 @@
       if (restoredCount > 0) {
         showToast(`✅ Профиль «${bartenderName} (${restaurantName})» загружен!`);
       }
+
+      checkAndShowChangelogOnce();
     }
 
     function setMode(mode) {
@@ -1224,7 +1301,6 @@
       return { cocktail: c, qType, questionText, shortLabel, subText, correctAnswer, options, timeLimitSec, answered: false };
     }
 
-    // ================= РЕЖИМ 1: ЗАЧЕТКА И СЛЕПОЙ ЭКЗАМЕН С ТАЙМЕРОМ =================
     function startCategoryExam(catCode) {
       clearActiveFocus();
       if (!bartenderName || !restaurantName) {
@@ -1526,14 +1602,11 @@
               <button type="button" onclick="this.blur(); cancelActiveExam()" title="Прервать экзамен" class="text-slate-400 px-1">✖</button>
             </div>
           </div>
-
           <div>
             <span class="text-[11px] text-slate-400">${q.subText}</span>
             <h2 class="text-lg font-extrabold text-white mt-0.5">${getName(c)}</h2>
           </div>
-
           <p class="text-sm font-semibold text-amber-300 bg-slate-900/60 px-3 py-2 rounded-xl border border-slate-700/60">${q.questionText}</p>
-
           <div class="space-y-2.5">${optionsHTML}</div>
         </div>
       `;
@@ -1541,7 +1614,6 @@
       startQuestionTimer(q.timeLimitSec);
     }
 
-    // ================= РЕЖИМ 2: ТРЕНИРОВКА С ПОДСКАЗКАМИ =================
     function setQuizFilter(filter) {
       clearActiveFocus();
       quizFilter = filter;
@@ -1628,7 +1700,6 @@
       `;
     }
 
-    // ================= РЕЖИМ 3: СБОРКА ТТК С БЫСТРЫМИ КНОПКАМИ =================
     function initBuilder(itemId) {
       const pool = getPracticePool();
       if (itemId) builderCocktail = allItems.find(c => c.id === itemId);
@@ -1762,7 +1833,6 @@
       btn.onclick = function() { this.blur(); nextBuilderCocktail(); };
     }
 
-    // ================= РЕЖИМ 4: КАРТОЧКИ =================
     function renderFlashcard() {
       const pool = getPracticePool();
       if (fcIndex >= pool.length) fcIndex = 0;
@@ -1812,7 +1882,6 @@
     function nextCard() { const p = getPracticePool(); fcIndex = (fcIndex + 1) % p.length; fcFlipped = false; renderFlashcard(); }
     function prevCard() { const p = getPracticePool(); fcIndex = (fcIndex - 1 + p.length) % p.length; fcFlipped = false; renderFlashcard(); }
 
-    // ================= РЕЖИМ 5: БАЗА ТТК =================
     function renderList() {
       const q = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
       const pool = getPracticePool();
@@ -1908,32 +1977,26 @@
       else if (currentMode === 'list') renderList();
     }
 
-    // ================= ГЕНЕРАЦИЯ ИКОНКИ ДЛЯ ГЛАВНОГО ЭКРАНА =================
     (function setupAppIcon() {
       try {
         const canvas = document.createElement('canvas');
         canvas.width = 512;
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
-
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(0, 0, 512, 512);
-
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 16;
         ctx.strokeRect(28, 28, 456, 456);
-
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = '210px sans-serif';
         ctx.fillText('🍸', 256, 205);
-
         ctx.fillStyle = '#fbbf24';
         ctx.font = '900 76px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillText('ТТК БАР', 256, 395);
 
         const iconDataUrl = canvas.toDataURL('image/png');
-
         ['apple-touch-icon', 'icon'].forEach(rel => {
           let link = document.createElement('link');
           link.rel = rel;
@@ -1948,9 +2011,7 @@
           display: "standalone",
           background_color: "#0f172a",
           theme_color: "#0f172a",
-          icons: [
-            { src: iconDataUrl, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-          ]
+          icons: [{ src: iconDataUrl, sizes: "512x512", type: "image/png", purpose: "any maskable" }]
         };
         const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
         const manifestLink = document.createElement('link');
@@ -1959,12 +2020,18 @@
         document.head.appendChild(manifestLink);
       } catch (e) {}
     })();
-allItems = sanitizeLoadedItems(allItems);
+
+    allItems = sanitizeLoadedItems(allItems);
     populateRestaurantSelect('', restaurantName);
     loadCurrentProfileProgress();
     renderAll();
     syncWithGoogleSheet();
-    if (!bartenderName || !restaurantName) openUserModal();
+
+    if (!bartenderName || !restaurantName) {
+      openUserModal();
+    } else {
+      checkAndShowChangelogOnce();
+    }
   </script>
 </body>
 </html>
