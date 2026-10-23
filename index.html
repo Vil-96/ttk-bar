@@ -125,7 +125,7 @@
     </div>
   </div>
 
-  <!-- Модалка ЧТО НОВОГО (Железобетонная прокрутка) -->
+  <!-- Модалка ЧТО НОВОГО (Железобетонная прокрутка + без скрепок) -->
   <div id="changelog-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div id="changelog-card-wrapper" class="bg-slate-800 border-2 border-amber-500/70 rounded-2xl max-w-md w-full flex flex-col max-h-[80vh] shadow-2xl overflow-hidden">
       
@@ -286,12 +286,17 @@
 
       const filterBar = document.getElementById('dynamic-category-buttons');
       if (filterBar) {
-        let btnHtml = `<button onclick="this.blur(); setPracticeCategory('ALL')" id="pcat-ALL" class="px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition">🌐 Все (${items.length})</button>
-                       <button onclick="this.blur(); setPracticeCategory('WEAK')" id="pcat-WEAK" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40">🔥 Ошибки (<span id="weak-count-badge">${weakItems.length}</span>)</button>`;
+        let btnHtml = `
+          <button onclick="this.blur(); setPracticeCategory('ALL')" id="pcat-ALL" class="px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition">🌐 Все (${items.length})</button>
+          <button onclick="this.blur(); setPracticeCategory('WEAK')" id="pcat-WEAK" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40">🔥 Ошибки (<span id="weak-count-badge">${weakItems.length}</span>)</button>
+          <select id="pcat-SELECT" onchange="this.blur(); setPracticeCategory(this.value)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none">
+            <option value="HIDE" disabled ${practiceCategory==='ALL'||practiceCategory==='WEAK'?'selected':''}>📁 Категории ▾</option>
+        `;
         MAIN_STATIONS.forEach(code => {
           let m = CATEGORY_META[code];
-          btnHtml += `<button onclick="this.blur(); setPracticeCategory('${code}')" id="pcat-${code}" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">${m.title.replace('✨ ','')} (${m.count})</button>`;
+          btnHtml += `<option value="${code}" ${practiceCategory===code?'selected':''}>${m.title.replace('✨ ','')} (${m.count})</option>`;
         });
+        btnHtml += `</select>`;
         filterBar.innerHTML = btnHtml;
       }
     }
@@ -362,7 +367,8 @@
         badge.className = "text-[10px] uppercase text-emerald-400 font-extrabold"; badge.textContent = "Обновление"; title.className = "text-base font-extrabold text-amber-400"; title.textContent = "🚀 Что нового";
       }
       
-      container.innerHTML = currentAnnouncement.text.split('\n').filter(l=>l.trim()!=='').map(line => `<div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex gap-2.5 items-start"><span class="text-base shrink-0">${line.includes('🔥')?'':'📌'}</span><div class="text-slate-200 leading-snug">${line}</div></div>`).join('');
+      // Убрали принудительное добавление 📌
+      container.innerHTML = currentAnnouncement.text.split('\n').filter(l=>l.trim()!=='').map(line => `<div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex gap-2.5 items-start"><div class="text-slate-200 leading-snug">${line}</div></div>`).join('');
     }
 
     function loadCurrentProfileProgress() {
@@ -512,12 +518,28 @@
     }
 
     function setPracticeCategory(c, noRender) {
-      clearActiveFocus(); if (c==='WEAK' && !weakItems.length) return showToast('🎉 Нет ошибок!');
+      clearActiveFocus(); 
+      if (c === 'WEAK' && !weakItems.length) {
+         let sel = document.getElementById('pcat-SELECT');
+         if(sel) sel.value = (practiceCategory !== 'ALL' && practiceCategory !== 'WEAK') ? practiceCategory : 'HIDE';
+         return showToast('🎉 Нет ошибок!');
+      }
+      
       practiceCategory = c;
-      ['ALL','WEAK', ...MAIN_STATIONS].forEach(x => {
-        const btn = document.getElementById(`pcat-${x}`); if(!btn)return;
-        btn.className = x===c ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : (x==='WEAK' ? "px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700");
-      });
+      
+      const btnAll = document.getElementById('pcat-ALL');
+      const btnWeak = document.getElementById('pcat-WEAK');
+      const selCat = document.getElementById('pcat-SELECT');
+      
+      if(btnAll) btnAll.className = c==='ALL' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
+      if(btnWeak) btnWeak.className = c==='WEAK' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40";
+      if(selCat) {
+        selCat.className = (c !== 'ALL' && c !== 'WEAK') 
+          ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none" 
+          : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none";
+        selCat.value = (c === 'ALL' || c === 'WEAK') ? 'HIDE' : c;
+      }
+      
       fcIndex = 0; fcFlipped = false; builderCocktail = null;
       if (!noRender) { generatePracticeQuestion(); renderAll(); }
     }
