@@ -36,7 +36,7 @@
             <span>🚀 Что нового</span>
           </button>
           <!-- Кнопка админки -->
-          <button onclick="this.blur(); openAdminModal()" title="Управление разделами" class="flex items-center gap-1 text-[11px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-md border border-rose-500/40 font-semibold">
+          <button onclick="this.blur(); openAdminModal()" title="Управление" class="flex items-center gap-1 text-[11px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-md border border-rose-500/40 font-semibold">
             <span>⚙️ Настройки</span>
           </button>
         </div>
@@ -176,7 +176,7 @@
 
       <div class="pt-2 border-t border-slate-800">
         <label class="block text-[11px] text-slate-400 font-bold mb-1">ПИН-код администратора:</label>
-        <input type="password" id="admin-pin" placeholder="Например: 2296" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-rose-400 mb-3" />
+        <input type="password" id="admin-pin" placeholder="****" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-rose-400 mb-3" />
         <button onclick="this.blur(); saveAdminSettings()" class="w-full py-3 rounded-xl bg-rose-600 active:bg-rose-500 text-white font-bold text-sm shadow-lg">Сохранить изменения 🚀</button>
       </div>
     </div>
@@ -239,7 +239,6 @@
     let currentAdminTab = 'ann';
 
     function applyCategorySettings() {
-      // Оставляем только те напитки, у которых "В приложении" не выключено
       allItems = rawAllItems.filter(item => {
         let s = catSettings[item.catLabel];
         return s ? s.app : true; 
@@ -273,7 +272,6 @@
         };
       });
 
-      // РЕЗИНОВЫЙ ИТОГОВЫЙ ЭКЗАМЕН (Считаем только те, где exam === true)
       let examPoolCount = items.filter(c => {
         let s = catSettings[c.catLabel];
         return s ? s.exam : true;
@@ -322,7 +320,6 @@
     }
 
     function renderAdminCatList() {
-      // Берем все уникальные категории, которые вообще есть физически (даже отключенные)
       let cats = [...new Set(rawAllItems.map(i => i.catLabel))].sort();
       let html = '';
       cats.forEach(c => {
@@ -370,7 +367,7 @@
             closeAdminModal(); 
             showToast('✅ Настройки успешно применены!'); 
           } else alert(res.error);
-        }).doPost({postData: {contents: JSON.stringify(payload)}}); // cheat call
+        }).doPost({postData: {contents: JSON.stringify(payload)}}); 
       } else if (EXTERNAL_API_URL) {
         fetch(EXTERNAL_API_URL.trim(), { method: 'POST', body: JSON.stringify(payload) })
         .then(r=>r.json()).then(res => {
@@ -626,7 +623,6 @@
       const meta = CATEGORY_META[code];
       const cycl=['qty','qty','glass','garnish'];
       
-      // ИТОГОВЫЙ ЭКЗАМЕН БЕРЕТ ВСЕ НАПИТКИ С ГАЛОЧКОЙ "В ЭКЗАМЕНЕ"
       let pool = code === 'ALL' ? allItems.filter(item => { let s = catSettings[item.catLabel]; return s ? s.exam : true; }) : allItems.filter(x=>x.cat===code);
       let q = shuffle(pool); 
       
