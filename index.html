@@ -169,7 +169,7 @@
           <h3 id="changelog-title-text" class="text-base font-extrabold text-amber-400">🚀 Что нового в тренажёре ТТК</h3>
         </div>
         <div class="flex items-center gap-1">
-          <button onclick="this.blur(); openAdminAnnounceModal()" title="Изменить объявление " class="text-xs px-2 py-1 rounded bg-slate-700 text-amber-300">⚙️</button>
+          <button onclick="this.blur(); openAdminAnnounceModal()" title="Изменить объявление" class="text-xs px-2 py-1 rounded bg-slate-700 text-amber-300">⚙️</button>
           <button onclick="this.blur(); closeChangelogModal()" class="text-slate-400 text-sm px-1">✖</button>
         </div>
       </div>
@@ -659,6 +659,11 @@
     }
 
     function checkAndShowChangelogOnce() {
+      // 1. Игнорируем стартовую хардкод-заглушку (ждем реальных данных с сервера)
+      if (currentAnnouncement.version === 'v8_default_2026') return;
+      // 2. Если текст пустой — вообще не показываем плашку при входе
+      if (!currentAnnouncement.text || currentAnnouncement.text.trim() === '') return;
+
       const lastSeenVer = localStorage.getItem('ttk_seen_announcement_version');
       if (lastSeenVer !== currentAnnouncement.version) {
         renderChangelogModalContent();
@@ -701,7 +706,7 @@
       const text = document.getElementById('admin-ann-text').value.trim();
       const pin = document.getElementById('admin-ann-pin').value.trim();
 
-      if (!text) return alert('Введите текст объявления!');
+      // Разрешаем пустой текст (чтобы отключить плашку), проверяем только пин
       if (pin !== "2296") return alert('Неверный ПИН-код!');
 
       const payload = { action: "saveAnnouncement", type: type, text: text, pin: pin };
@@ -885,6 +890,7 @@
 
     function syncWithGoogleSheet() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // 1. База ТТК
         google.script.run.withSuccessHandler(function(sheetItems) {
           if (sheetItems && Array.isArray(sheetItems) && sheetItems.length > 0) {
             allItems = sanitizeLoadedItems(sheetItems);
@@ -893,20 +899,36 @@
           renderAll();
         }).getItemsFromSheetIfAvailable();
 
+        // 2. Прогресс (Зачетки)
         google.script.run.withSuccessHandler(function(data) {
-          if (data) {
-            if (data.profiles && typeof data.profiles === 'object') {
-              serverProfiles = data.profiles;
-              localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
-              loadCurrentProfileProgress();
-            }
-            if (data.announcement) {
-              currentAnnouncement = data.announcement;
-            }
+          if (data && typeof data === 'object') {
+            serverProfiles = data;
+            localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles));
+            loadCurrentProfileProgress();
+            renderAll();
+          }
+        }).getAllUserProfiles();
+
+        // 3. Объявления
+        google.script.run.withSuccessHandler(function(ann) {
+          if (ann && ann.version) {
+            currentAnnouncement = ann;
             renderAll();
             if (bartenderName && restaurantName) checkAndShowChangelogOnce();
           }
-        }).getAllUserProfiles(); // Или отдельный метод, но doGet отдает всё вместе
+        }).getSharedAnnouncement();
+
+        // 4. Кастомные имена
+        google.script.run.withSuccessHandler(function(names) {
+          if (names && typeof names === 'object') {
+            Object.keys(names).forEach(k => {
+              if (!String(names[k]).startsWith('№')) customNames[k] = names[k];
+            });
+            localStorage.setItem('ttk_custom_names', JSON.stringify(customNames));
+            renderAll();
+          }
+        }).getSharedCustomNames();
+
       } else if (EXTERNAL_API_URL && EXTERNAL_API_URL.trim() !== "") {
         const url = EXTERNAL_API_URL.trim() + (EXTERNAL_API_URL.includes('?') ? '&' : '?') + 'action=getInitData';
         fetch(url)
@@ -2030,8 +2052,6 @@
 
     if (!bartenderName || !restaurantName) {
       openUserModal();
-    } else {
-      checkAndShowChangelogOnce();
     }
   </script>
 </body>
