@@ -289,7 +289,7 @@
         let btnHtml = `
           <button onclick="this.blur(); setPracticeCategory('ALL')" id="pcat-ALL" class="px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition">🌐 Все (${items.length})</button>
           <button onclick="this.blur(); setPracticeCategory('WEAK')" id="pcat-WEAK" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40">🔥 Ошибки (<span id="weak-count-badge">${weakItems.length}</span>)</button>
-          <select id="pcat-SELECT" onchange="this.blur(); setPracticeCategory(this.value)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none">
+          <select id="pcat-SELECT" onchange="this.blur(); setPracticeCategory(this.value)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none w-[130px] text-xs truncate cursor-pointer appearance-none">
             <option value="HIDE" disabled ${practiceCategory==='ALL'||practiceCategory==='WEAK'?'selected':''}>📁 Категории ▾</option>
         `;
         MAIN_STATIONS.forEach(code => {
@@ -299,6 +299,33 @@
         btnHtml += `</select>`;
         filterBar.innerHTML = btnHtml;
       }
+    }
+
+    function setPracticeCategory(c, noRender) {
+      clearActiveFocus(); 
+      if (c === 'WEAK' && !weakItems.length) {
+         let sel = document.getElementById('pcat-SELECT');
+         if(sel) sel.value = (practiceCategory !== 'ALL' && practiceCategory !== 'WEAK') ? practiceCategory : 'HIDE';
+         return showToast('🎉 Нет ошибок!');
+      }
+      
+      practiceCategory = c;
+      
+      const btnAll = document.getElementById('pcat-ALL');
+      const btnWeak = document.getElementById('pcat-WEAK');
+      const selCat = document.getElementById('pcat-SELECT');
+      
+      if(btnAll) btnAll.className = c==='ALL' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
+      if(btnWeak) btnWeak.className = c==='WEAK' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40";
+      if(selCat) {
+        selCat.className = (c !== 'ALL' && c !== 'WEAK') 
+          ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition outline-none w-[130px] text-xs truncate cursor-pointer appearance-none" 
+          : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none w-[130px] text-xs truncate cursor-pointer appearance-none";
+        selCat.value = (c === 'ALL' || c === 'WEAK') ? 'HIDE' : c;
+      }
+      
+      fcIndex = 0; fcFlipped = false; builderCocktail = null;
+      if (!noRender) { generatePracticeQuestion(); renderAll(); }
     }
 
     // ============= АДМИНКА =============
