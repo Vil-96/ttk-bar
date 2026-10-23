@@ -32,12 +32,14 @@
           <button onclick="this.blur(); openUserModal()" class="flex items-center gap-1 text-xs text-slate-300 bg-slate-800/90 px-2 py-0.5 rounded-md border border-slate-700">
             <span>👤</span><span id="bartender-name-badge" class="font-semibold">Загрузка...</span>
           </button>
-          <button onclick="this.blur(); openChangelogModal()" title="Объявления сети" class="flex items-center gap-1 text-[11px] text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/40 font-semibold">
+          <button onclick="this.blur(); openChangelogModal()" title="Что нового" class="flex items-center gap-1 text-[11px] text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/40 font-semibold">
             <span>🚀 Что нового</span>
           </button>
-          <!-- Кнопка админки -->
-          <button onclick="this.blur(); openAdminModal()" title="Управление" class="flex items-center gap-1 text-[11px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-md border border-rose-500/40 font-semibold">
+          <button onclick="this.blur(); openAdminModal()" title="Настройки" class="flex items-center gap-1 text-[11px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-md border border-rose-500/40 font-semibold">
             <span>⚙️ Настройки</span>
+          </button>
+          <button onclick="this.blur(); openFeedbackModal()" title="Предложить идею" class="flex items-center gap-1 text-[11px] text-sky-300 bg-sky-500/15 px-2 py-0.5 rounded-md border border-sky-500/40 font-semibold">
+            <span>💡 Идея</span>
           </button>
         </div>
       </div>
@@ -101,7 +103,7 @@
     </section>
   </main>
 
-  <!-- Модалки -->
+  <!-- Модалка ИМЯ -->
   <div id="user-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div>
@@ -123,7 +125,7 @@
     </div>
   </div>
 
-  <!-- Окно ЧТО НОВОГО -->
+  <!-- Модалка ЧТО НОВОГО -->
   <div id="changelog-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div id="changelog-card-wrapper" class="bg-slate-800 border-2 border-amber-500/70 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-700 pb-2.5">
@@ -138,7 +140,7 @@
     </div>
   </div>
 
-  <!-- ПАНЕЛЬ АДМИНИСТРАТОРА (Новости + Разделы) -->
+  <!-- ПАНЕЛЬ АДМИНИСТРАТОРА -->
   <div id="admin-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border-2 border-rose-500/60 rounded-2xl max-w-md w-full p-5 space-y-3.5 shadow-2xl">
       <div class="flex items-center justify-between pb-1">
@@ -166,18 +168,31 @@
         </div>
       </div>
 
-      <!-- Вкладка Категорий (Вкл/Выкл) -->
+      <!-- Вкладка Разделы -->
       <div id="adm-sec-cat" class="hidden space-y-2 text-xs">
-        <div class="text-[11px] text-slate-400 pb-1 leading-snug">Управляй видимостью разделов в приложении и решай, попадут ли они в большой Итоговый Экзамен.</div>
-        <div id="admin-cat-list" class="space-y-2 max-h-[30vh] overflow-y-auto pr-1">
-          <!-- Сюда генерятся тумблеры -->
-        </div>
+        <div class="text-[11px] text-slate-400 pb-1 leading-snug">Управляй видимостью разделов в приложении и решай, попадут ли они в Итоговый Экзамен.</div>
+        <div id="admin-cat-list" class="space-y-2 max-h-[30vh] overflow-y-auto pr-1"></div>
       </div>
 
       <div class="pt-2 border-t border-slate-800">
         <label class="block text-[11px] text-slate-400 font-bold mb-1">ПИН-код администратора:</label>
         <input type="password" id="admin-pin" placeholder="****" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-rose-400 mb-3" />
         <button onclick="this.blur(); saveAdminSettings()" class="w-full py-3 rounded-xl bg-rose-600 active:bg-rose-500 text-white font-bold text-sm shadow-lg">Сохранить изменения 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Окно ОБРАТНАЯ СВЯЗЬ -->
+  <div id="feedback-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div>
+        <h3 class="text-base font-bold text-sky-400">💡 Предложить идею</h3>
+        <p class="text-[11px] text-slate-300 mt-1">Нашли ошибку в граммовке, не работает кнопка или есть крутая идея для бара? Напишите нам!</p>
+      </div>
+      <textarea id="feedback-text" rows="4" placeholder="Ваша идея или замечание..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-sky-400"></textarea>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="this.blur(); closeFeedbackModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-200 text-sm font-semibold">Отмена</button>
+        <button onclick="this.blur(); sendFeedback()" id="feedback-submit-btn" class="px-4 py-2 rounded-xl bg-sky-500 text-slate-950 font-bold text-sm shadow">Отправить 🚀</button>
       </div>
     </div>
   </div>
@@ -217,41 +232,27 @@
       { group: "Франчайзи", items: ["Абакан"] }
     ];
 
-    let rawAllItems = []; // Все напитки физически
-    let allItems = []; // Отфильтрованные (те, что включены в приложении)
-    let catSettings = {}; // Настройки видимости из админки
-    let CATEGORY_META = {};
-    let MAIN_STATIONS = [];
+    let rawAllItems = [], allItems = [], catSettings = {}, CATEGORY_META = {}, MAIN_STATIONS = [];
 
     let bartenderName = localStorage.getItem('ttk_bartender_name') || '';
     let restaurantName = localStorage.getItem('ttk_restaurant_name') || '';
     let customNames = JSON.parse(localStorage.getItem('ttk_custom_names') || '{}');
     let serverProfiles = JSON.parse(localStorage.getItem('ttk_server_profiles') || '{}');
-    let examProgress = {};
-    let weakItems = [];
+    let examProgress = {}, weakItems = [];
 
-    let currentMode = 'exam';
-    let practiceCategory = 'ALL';
-    let quizFilter = 'all';
-
+    let currentMode = 'exam', practiceCategory = 'ALL', quizFilter = 'all';
     let activeExam = null, examTimerId = null, questionDeadlineMs = 0, currentQuestionDurationSec = SHORT_QUESTION_SEC, timeLeftSec = SHORT_QUESTION_SEC;
-    let currentPracticeQ = null, fcIndex = 0, fcFlipped = false, builderCocktail = null, focusedBuilderInputId = null, renameTargetId = null;
-    let currentAdminTab = 'ann';
+    let currentPracticeQ = null, fcIndex = 0, fcFlipped = false, builderCocktail = null, focusedBuilderInputId = null, renameTargetId = null, currentAdminTab = 'ann';
 
     function applyCategorySettings() {
-      allItems = rawAllItems.filter(item => {
-        let s = catSettings[item.catLabel];
-        return s ? s.app : true; 
-      });
+      allItems = rawAllItems.filter(item => { let s = catSettings[item.catLabel]; return s ? s.app : true; });
       buildDynamicCategories(allItems);
       if (allItems.length > 0) renderAll();
     }
 
     function buildDynamicCategories(items) {
-      CATEGORY_META = {};
-      MAIN_STATIONS = [];
-      let counts = {};
-      let labels = {};
+      CATEGORY_META = {}; MAIN_STATIONS = [];
+      let counts = {}, labels = {};
 
       items.forEach(c => {
         if (!counts[c.cat]) { counts[c.cat] = 0; labels[c.cat] = c.catLabel; MAIN_STATIONS.push(c.cat); }
@@ -266,21 +267,11 @@
       });
 
       MAIN_STATIONS.forEach(code => {
-        CATEGORY_META[code] = {
-          code: code, title: labels[code] || code, count: counts[code],
-          examQuestions: Math.min(counts[code], 25), desc: `Вопросов в билете: ${Math.min(counts[code], 25)} (позиций: ${counts[code]})`
-        };
+        CATEGORY_META[code] = { code: code, title: labels[code] || code, count: counts[code], examQuestions: Math.min(counts[code], 25), desc: `Вопросов: ${Math.min(counts[code], 25)} (всего: ${counts[code]})` };
       });
 
-      let examPoolCount = items.filter(c => {
-        let s = catSettings[c.catLabel];
-        return s ? s.exam : true;
-      }).length;
-
-      CATEGORY_META['ALL'] = {
-        code: 'ALL', title: '🌐 Итоговый экзамен', count: examPoolCount,
-        examQuestions: examPoolCount, desc: `Сводный билет из ${examPoolCount} вопросов по всей Базе`
-      };
+      let examPoolCount = items.filter(c => { let s = catSettings[c.catLabel]; return s ? s.exam : true; }).length;
+      CATEGORY_META['ALL'] = { code: 'ALL', title: '🌐 Итоговый экзамен', count: examPoolCount, examQuestions: examPoolCount, desc: `Сводный билет из ${examPoolCount} вопросов по базе` };
 
       document.getElementById('total-ttk-count').textContent = items.length;
 
@@ -300,17 +291,13 @@
     function openAdminModal() {
       const pin = prompt("🔐 Введите ПИН-код администратора:");
       if (pin !== "2296") return pin !== null && alert("❌ Неверный ПИН-код!");
-      
       document.getElementById('admin-ann-type').value = currentAnnouncement.type || 'info';
       document.getElementById('admin-ann-text').value = currentAnnouncement.text || '';
       document.getElementById('admin-pin').value = '';
-      
       renderAdminCatList();
       document.getElementById('admin-modal').classList.remove('hidden');
     }
-    
     function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
-    
     function switchAdminTab(tab) {
       currentAdminTab = tab;
       document.getElementById('adm-tab-ann').className = tab==='ann' ? "w-full py-2 bg-rose-600 text-white rounded-lg text-xs font-bold transition shadow" : "w-full py-2 bg-slate-800 text-slate-400 rounded-lg text-xs font-bold transition";
@@ -318,112 +305,62 @@
       document.getElementById('adm-sec-ann').classList.toggle('hidden', tab!=='ann');
       document.getElementById('adm-sec-cat').classList.toggle('hidden', tab!=='cat');
     }
-
     function renderAdminCatList() {
       let cats = [...new Set(rawAllItems.map(i => i.catLabel))].sort();
       let html = '';
       cats.forEach(c => {
         let s = catSettings[c] || {app: true, exam: true};
-        html += `
-          <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 flex flex-col gap-1.5">
-            <div class="font-bold text-amber-400 text-xs">${c}</div>
-            <div class="flex gap-4 text-xs text-slate-300">
-              <label class="flex items-center gap-1.5"><input type="checkbox" id="adm-app-${c}" class="accent-rose-500 w-4 h-4" ${s.app?'checked':''}> В приложении</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" id="adm-exam-${c}" class="accent-rose-500 w-4 h-4" ${s.exam?'checked':''}> В Экзамене</label>
-            </div>
-          </div>
-        `;
+        html += `<div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 flex flex-col gap-1.5"><div class="font-bold text-amber-400 text-xs">${c}</div><div class="flex gap-4 text-xs text-slate-300"><label class="flex items-center gap-1.5"><input type="checkbox" id="adm-app-${c}" class="accent-rose-500 w-4 h-4" ${s.app?'checked':''}> В приложении</label><label class="flex items-center gap-1.5"><input type="checkbox" id="adm-exam-${c}" class="accent-rose-500 w-4 h-4" ${s.exam?'checked':''}> В Экзамене</label></div></div>`;
       });
       document.getElementById('admin-cat-list').innerHTML = html;
     }
-
     function saveAdminSettings() {
       const pin = document.getElementById('admin-pin').value.trim();
       if (pin !== "2296") return alert('Неверный ПИН-код!');
-      
-      const type = document.getElementById('admin-ann-type').value;
-      const text = document.getElementById('admin-ann-text').value.trim();
-
       let newSettings = {};
       let cats = [...new Set(rawAllItems.map(i => i.catLabel))];
       cats.forEach(c => {
-        let chkApp = document.getElementById(`adm-app-${c}`);
-        let chkExam = document.getElementById(`adm-exam-${c}`);
-        if (chkApp && chkExam) {
-           newSettings[c] = { app: chkApp.checked, exam: chkExam.checked };
-        }
+        let chkApp = document.getElementById(`adm-app-${c}`), chkExam = document.getElementById(`adm-exam-${c}`);
+        if (chkApp && chkExam) newSettings[c] = { app: chkApp.checked, exam: chkExam.checked };
       });
-
-      const payload = { action: "saveAdminData", annType: type, annText: text, catSettings: newSettings, pin: pin };
-      
+      const payload = { action: "saveAdminData", annType: document.getElementById('admin-ann-type').value, annText: document.getElementById('admin-ann-text').value.trim(), catSettings: newSettings, pin: pin };
       showToast('⏳ Сохраняем...');
-      
       if (typeof google !== 'undefined' && google.script) {
         google.script.run.withSuccessHandler(res => {
-          if (res.success) { 
-            currentAnnouncement = res.announcement; 
-            catSettings = res.catSettings;
-            applyCategorySettings();
-            closeAdminModal(); 
-            showToast('✅ Настройки успешно применены!'); 
-          } else alert(res.error);
+          if (res.success) { currentAnnouncement = res.announcement; catSettings = res.catSettings; applyCategorySettings(); closeAdminModal(); showToast('✅ Сохранено!'); } else alert(res.error);
         }).doPost({postData: {contents: JSON.stringify(payload)}}); 
       } else if (EXTERNAL_API_URL) {
-        fetch(EXTERNAL_API_URL.trim(), { method: 'POST', body: JSON.stringify(payload) })
-        .then(r=>r.json()).then(res => {
-          if (res.success) { 
-            currentAnnouncement = res.announcement; 
-            catSettings = res.catSettings;
-            applyCategorySettings();
-            closeAdminModal(); 
-            showToast('✅ Настройки успешно применены!'); 
-          } else alert(res.error);
+        fetch(EXTERNAL_API_URL.trim(), { method: 'POST', body: JSON.stringify(payload) }).then(r=>r.json()).then(res => {
+          if (res.success) { currentAnnouncement = res.announcement; catSettings = res.catSettings; applyCategorySettings(); closeAdminModal(); showToast('✅ Сохранено!'); } else alert(res.error);
         }).catch(()=>alert('Ошибка сети'));
       }
     }
-    // ===================================
 
+    // ============= БАЗОВЫЕ ФУНКЦИИ =============
     function makeUserKey(name, rest) { return `${String(name||'').trim().toLowerCase().replace(/\s+/g,' ')}|${String(rest||'').trim().toLowerCase().replace(/\s+/g,' ')}`; }
-
-    function checkAndShowChangelogOnce() {
-      if (localStorage.getItem('ttk_seen_announcement_version') !== currentAnnouncement.version) {
-        renderChangelogModalContent(); document.getElementById('changelog-modal').classList.remove('hidden');
-      }
-    }
-
-    function openChangelogModal() {
-      if (isExamInProgress()) return showToast('🔒 Заверши текущий билет!');
-      renderChangelogModalContent(); document.getElementById('changelog-modal').classList.remove('hidden');
-    }
+    function checkAndShowChangelogOnce() { if (localStorage.getItem('ttk_seen_announcement_version') !== currentAnnouncement.version) { renderChangelogModalContent(); document.getElementById('changelog-modal').classList.remove('hidden'); } }
+    function openChangelogModal() { if (isExamInProgress()) return showToast('🔒 Заверши билет!'); renderChangelogModalContent(); document.getElementById('changelog-modal').classList.remove('hidden'); }
     function closeChangelogModal() { localStorage.setItem('ttk_seen_announcement_version', currentAnnouncement.version); document.getElementById('changelog-modal').classList.add('hidden'); }
 
     function renderChangelogModalContent() {
       const container = document.getElementById('changelog-content-container'), wrapper = document.getElementById('changelog-card-wrapper'), badge = document.getElementById('changelog-badge-text'), title = document.getElementById('changelog-title-text');
       if (currentAnnouncement.type === 'alert') {
-        wrapper.className = "bg-slate-800 border-2 border-rose-500 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl";
-        badge.className = "text-[10px] uppercase text-rose-400 font-extrabold"; badge.textContent = "⚠️ Срочное оповещение сети";
-        title.className = "text-base font-extrabold text-rose-400"; title.textContent = "🔥 Внимание! Важная информация";
+        wrapper.className = "bg-slate-800 border-2 border-rose-500 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl"; badge.className = "text-[10px] uppercase text-rose-400 font-extrabold"; badge.textContent = "⚠️ Срочное оповещение"; title.className = "text-base font-extrabold text-rose-400"; title.textContent = "🔥 Внимание! Важная информация";
       } else {
-        wrapper.className = "bg-slate-800 border-2 border-amber-500/70 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl";
-        badge.className = "text-[10px] uppercase text-emerald-400 font-extrabold"; badge.textContent = "Обновление";
-        title.className = "text-base font-extrabold text-amber-400"; title.textContent = "🚀 Что нового";
+        wrapper.className = "bg-slate-800 border-2 border-amber-500/70 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl"; badge.className = "text-[10px] uppercase text-emerald-400 font-extrabold"; badge.textContent = "Обновление"; title.className = "text-base font-extrabold text-amber-400"; title.textContent = "🚀 Что нового";
       }
-      container.innerHTML = currentAnnouncement.text.split('\n').filter(l=>l.trim()!=='').map(line => `<div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex gap-2.5 items-start"><span class="text-base shrink-0">📌</span><div class="text-slate-200 leading-snug">${line}</div></div>`).join('');
+      container.innerHTML = currentAnnouncement.text.split('\n').filter(l=>l.trim()!=='').map(line => `<div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex gap-2.5 items-start"><span class="text-base shrink-0">${line.includes('🔥')?'':'📌'}</span><div class="text-slate-200 leading-snug">${line}</div></div>`).join('');
     }
 
     function loadCurrentProfileProgress() {
       if (!bartenderName) { examProgress = {}; weakItems = []; return; }
       const key = makeUserKey(bartenderName, restaurantName);
-      examProgress = JSON.parse(localStorage.getItem(`ttk_prog_${key}`) || '{}');
-      weakItems = JSON.parse(localStorage.getItem(`ttk_weak_${key}`) || '[]');
+      examProgress = JSON.parse(localStorage.getItem(`ttk_prog_${key}`) || '{}'); weakItems = JSON.parse(localStorage.getItem(`ttk_weak_${key}`) || '[]');
       const cloudProg = (serverProfiles[key] || serverProfiles[makeUserKey(bartenderName,'')] || {}).progress || {};
       Object.keys(cloudProg).forEach(c => { if (!examProgress[c] || cloudProg[c].pct >= examProgress[c].pct) examProgress[c] = cloudProg[c]; });
       localStorage.setItem(`ttk_prog_${key}`, JSON.stringify(examProgress));
     }
-    function saveCurrentProfileProgress() {
-      if (!bartenderName) return; const key = makeUserKey(bartenderName, restaurantName);
-      localStorage.setItem(`ttk_prog_${key}`, JSON.stringify(examProgress)); localStorage.setItem(`ttk_weak_${key}`, JSON.stringify(weakItems));
-    }
+    function saveCurrentProfileProgress() { if (!bartenderName) return; const key = makeUserKey(bartenderName, restaurantName); localStorage.setItem(`ttk_prog_${key}`, JSON.stringify(examProgress)); localStorage.setItem(`ttk_weak_${key}`, JSON.stringify(weakItems)); }
 
     function populateRestaurantSelect(f='', s='') {
       const sel = document.getElementById('user-restaurant-select'); if (!sel) return;
@@ -474,28 +411,17 @@
 
     function syncWithGoogleSheet() {
       const handleData = (data) => {
-        if (data.items && data.items.length) {
-          rawAllItems = sanitizeLoadedItems(data.items);
-        } else {
-          document.getElementById('exam-container').innerHTML = `<div class="bg-rose-900/50 border border-rose-500 rounded-xl p-5 text-center text-rose-200">❌ База ТТК пуста! Добавьте напитки на лист "База_ТТК" в Google Таблице.</div>`;
-        }
-        if (data.customNames) {
-          Object.keys(data.customNames).forEach(k => { if(!String(data.customNames[k]).startsWith('№')) customNames[k] = data.customNames[k]; });
-          localStorage.setItem('ttk_custom_names', JSON.stringify(customNames));
-        }
+        if (data.items && data.items.length) rawAllItems = sanitizeLoadedItems(data.items);
+        else document.getElementById('exam-container').innerHTML = `<div class="bg-rose-900/50 border border-rose-500 rounded-xl p-5 text-center text-rose-200">❌ База ТТК пуста! Добавьте напитки на лист "База_ТТК" в Google Таблице.</div>`;
+        if (data.customNames) { Object.keys(data.customNames).forEach(k => { if(!String(data.customNames[k]).startsWith('№')) customNames[k] = data.customNames[k]; }); localStorage.setItem('ttk_custom_names', JSON.stringify(customNames)); }
         if (data.profiles) { serverProfiles = data.profiles; localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles)); loadCurrentProfileProgress(); }
         if (data.announcement) currentAnnouncement = data.announcement;
         if (data.catSettings) catSettings = data.catSettings;
-        
         applyCategorySettings();
         if (bartenderName && restaurantName) checkAndShowChangelogOnce();
       };
-
-      if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(handleData).doGet({parameter:{action:"getInitData"}});
-      } else if (EXTERNAL_API_URL) {
-        fetch(EXTERNAL_API_URL.trim()+(EXTERNAL_API_URL.includes('?')?'&':'?')+'action=getInitData').then(r=>r.json()).then(handleData).catch(()=>{});
-      }
+      if (typeof google !== 'undefined' && google.script) google.script.run.withSuccessHandler(handleData).doGet({parameter:{action:"getInitData"}});
+      else if (EXTERNAL_API_URL) fetch(EXTERNAL_API_URL.trim()+(EXTERNAL_API_URL.includes('?')?'&':'?')+'action=getInitData').then(r=>r.json()).then(handleData).catch(()=>{});
     }
 
     document.addEventListener('visibilitychange', () => { if (document.hidden && isExamInProgress()) { activeExam.tabSwitches = (activeExam.tabSwitches||0)+1; showToast(`⚠️ Сворачивание окна (${activeExam.tabSwitches})!`); }});
@@ -524,10 +450,7 @@
     function startQuestionTimer(d) {
       stopQuestionTimer(); currentQuestionDurationSec = d || SHORT_QUESTION_SEC; timeLeftSec = currentQuestionDurationSec;
       questionDeadlineMs = Date.now() + (timeLeftSec*1000); updateTimerUI();
-      examTimerId = setInterval(() => {
-        timeLeftSec = Math.max(0, Math.ceil((questionDeadlineMs - Date.now())/1000)); updateTimerUI();
-        if (timeLeftSec <= 0) { stopQuestionTimer(); handleExamTimeout(); }
-      }, 250);
+      examTimerId = setInterval(() => { timeLeftSec = Math.max(0, Math.ceil((questionDeadlineMs - Date.now())/1000)); updateTimerUI(); if (timeLeftSec <= 0) { stopQuestionTimer(); handleExamTimeout(); } }, 250);
     }
     function updateTimerUI() {
       const b = document.getElementById('exam-timer-badge'); if(!b)return;
@@ -620,17 +543,10 @@
 
     function startCategoryExam(code) {
       clearActiveFocus(); if (!bartenderName||!restaurantName) return openUserModal();
-      const meta = CATEGORY_META[code];
-      const cycl=['qty','qty','glass','garnish'];
-      
+      const meta = CATEGORY_META[code], cycl=['qty','qty','glass','garnish'];
       let pool = code === 'ALL' ? allItems.filter(item => { let s = catSettings[item.catLabel]; return s ? s.exam : true; }) : allItems.filter(x=>x.cat===code);
       let q = shuffle(pool); 
-      
-      if (code !== 'ALL') {
-        while(q.length < meta.examQuestions) q = q.concat(shuffle(pool));
-        q = q.slice(0, meta.examQuestions);
-      }
-
+      if (code !== 'ALL') { while(q.length < meta.examQuestions) q = q.concat(shuffle(pool)); q = q.slice(0, meta.examQuestions); }
       activeExam = { catCode:code, title:meta.title, queue:q.map((x,i)=>buildQuestionForItem(x,cycl[i%4])), index:0, correct:0, mistakes:[], tabSwitches:0 };
       updateHeaderUI(); renderExamView();
     }
@@ -729,6 +645,27 @@
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) { const b=document.getElementById('install-help-btn'); if(b) b.classList.add('hidden'); }
     function openInstallModal() { if(isExamInProgress())return showToast('🔒 Заверши билет!'); document.getElementById('install-modal').classList.remove('hidden'); }
     function closeInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
+
+    // ============= ОБРАТНАЯ СВЯЗЬ =============
+    function openFeedbackModal() { document.getElementById('feedback-text').value = ''; document.getElementById('feedback-modal').classList.remove('hidden'); }
+    function closeFeedbackModal() { document.getElementById('feedback-modal').classList.add('hidden'); }
+    function sendFeedback() {
+      const text = document.getElementById('feedback-text').value.trim();
+      if (!text) return alert("Сначала напишите вашу идею!");
+      
+      const btn = document.getElementById('feedback-submit-btn');
+      btn.textContent = "Отправка..."; btn.disabled = true;
+
+      const payload = { action: "saveFeedback", payload: { bartenderName: bartenderName, restaurantName: restaurantName, text: text } };
+      const onSuccess = () => { closeFeedbackModal(); showToast("✅ Спасибо! Идея отправлена."); btn.textContent = "Отправить 🚀"; btn.disabled = false; };
+
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(res => { if (res.success) onSuccess(); else { alert(res.error); btn.textContent = "Отправить 🚀"; btn.disabled = false; } }).saveFeedback(payload.payload);
+      } else if (EXTERNAL_API_URL) {
+        fetch(EXTERNAL_API_URL.trim(), { method: 'POST', body: JSON.stringify(payload) })
+        .then(r=>r.json()).then(res => { if (res.success) onSuccess(); else { alert(res.error); btn.textContent = "Отправить 🚀"; btn.disabled = false; } }).catch(()=> { alert('Ошибка сети'); btn.textContent = "Отправить 🚀"; btn.disabled = false; });
+      }
+    }
 
     function renderAll() { updateHeaderUI(); if(currentMode==='exam')renderExamView(); else if(currentMode==='practice')renderPracticeQuestion(); else if(currentMode==='builder')initBuilder(); else if(currentMode==='flashcards')renderFlashcard(); else renderList(); }
 
