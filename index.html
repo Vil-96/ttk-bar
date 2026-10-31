@@ -95,9 +95,8 @@
     </section>
 
     <section id="view-list" class="hidden space-y-3">
-      <div class="flex gap-2">
+     <div class="flex gap-2">
         <input type="text" id="search-input" oninput="renderList()" placeholder="Поиск по названию, ингредиенту..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
-        <button onclick="this.blur(); forceCleanNames()" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-300">Сброс имён</button>
       </div>
       <div id="list-container" class="space-y-3"></div>
     </section>
@@ -206,13 +205,6 @@
     </div>
   </div>
 
-  <div id="rename-modal" class="fixed inset-0 z-50 hidden bg-black/75 flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4">
-      <h3 class="text-base font-bold text-amber-400">✏️ Переименовать</h3>
-      <input type="text" id="rename-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
-      <div class="flex justify-end gap-2"><button onclick="closeRenameModal()" class="px-4 py-2 bg-slate-700 rounded-xl text-sm">Отмена</button><button onclick="saveRename()" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-xl text-sm">Сохранить</button></div>
-    </div>
-  </div>
 
   <div id="install-modal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3.5">
@@ -653,7 +645,7 @@
     function generatePracticeQuestion() { clearActiveFocus(); const p=getPracticePool(); currentPracticeQ=buildQuestionForItem(p[Math.floor(Math.random()*p.length)], quizFilter); renderPracticeQuestion(); }
     function renderPracticeQuestion() {
       clearActiveFocus(); if(!currentPracticeQ) generatePracticeQuestion(); const c=currentPracticeQ.cocktail;
-      document.getElementById('practice-container').innerHTML = `<div class="flex justify-between border-b border-slate-700/80 pb-3"><div><span class="text-[11px] text-emerald-400 font-bold uppercase">Тренировка</span><h2 class="text-base font-bold text-white">${getName(c)}</h2></div><button onclick="openRenameModal(${c.id})" class="px-2.5 py-1.5 bg-slate-700/70 text-slate-300 rounded-lg">✏️</button></div><p class="text-sm font-semibold text-amber-300 bg-slate-900/60 p-3 rounded-xl">${currentPracticeQ.questionText}</p><div class="space-y-2.5">${currentPracticeQ.options.map((o,i)=>`<button id="pq-opt-${i}" onclick="this.blur(); answerPractice(${i})" class="opt-btn w-full text-left p-3.5 bg-slate-900 border border-slate-700 rounded-xl text-sm">${o}</button>`).join('')}</div><div id="pq-feed" class="hidden pt-2"></div>`;
+      document.getElementById('practice-container').innerHTML = `<div class="border-b border-slate-700/80 pb-3"><span class="text-[11px] text-emerald-400 font-bold uppercase">Тренировка</span><h2 class="text-base font-bold text-white">${getName(c)}</h2></div><p class="text-sm font-semibold text-amber-300 bg-slate-900/60 p-3 rounded-xl">${currentPracticeQ.questionText}</p><div class="space-y-2.5">${currentPracticeQ.options.map((o,i)=>`<button id="pq-opt-${i}" onclick="this.blur(); answerPractice(${i})" class="opt-btn w-full text-left p-3.5 bg-slate-900 border border-slate-700 rounded-xl text-sm">${o}</button>`).join('')}</div><div id="pq-feed" class="hidden pt-2"></div>`;
     }
     function answerPractice(idx) {
       if(currentPracticeQ.answered)return; currentPracticeQ.answered=true; const c=currentPracticeQ.cocktail, o=currentPracticeQ.options[idx], ok=o===currentPracticeQ.correctAnswer;
@@ -680,7 +672,7 @@
 
     function renderFlashcard() {
       const p=getPracticePool(); if(fcIndex>=p.length)fcIndex=0; const c=p[fcIndex], card=document.getElementById('fc-card'); document.getElementById('fc-counter').textContent=`Карточка ${fcIndex+1}/${p.length}`;
-      if(!fcFlipped) card.innerHTML=`<div class="flex justify-between"><span class="px-2 py-1 bg-amber-500/20 text-amber-300 text-[10px] rounded-full">${c.catLabel}</span><button onclick="event.stopPropagation();openRenameModal(${c.id})" class="px-2 py-1 bg-slate-700 rounded text-xs">✏️</button></div><div class="my-auto text-center py-8"><h2 class="text-xl font-bold text-white">${getName(c)}</h2></div><div class="text-center text-xs text-amber-400">👆 Нажми, чтобы перевернуть</div>`;
+      if(!fcFlipped) card.innerHTML=`<div><span class="px-2 py-1 bg-amber-500/20 text-amber-300 text-[10px] rounded-full">${c.catLabel}</span></div><div class="my-auto text-center py-8"><h2 class="text-xl font-bold text-white">${getName(c)}</h2></div><div class="text-center text-xs text-amber-400">👆 Нажми, чтобы перевернуть</div>`;
       else card.innerHTML=`<div class="flex justify-between border-b border-slate-700 pb-2"><h3 class="text-sm font-bold text-amber-400">${getName(c)}</h3><span class="text-[11px] px-2 bg-slate-700 rounded">${c.method}</span></div><div class="space-y-3 my-2"><ul>${c.ingredients.map(i=>`<li class="flex justify-between py-1 border-b border-slate-700/60 text-xs text-slate-200"><span>${i.name}</span><span class="font-bold text-amber-300">${i.qty} ${i.unit}</span></li>`).join('')}</ul><div class="grid grid-cols-2 gap-2 text-xs"><div class="bg-slate-900 p-2 rounded border border-slate-700"><div class="text-[10px] text-slate-400">Посуда</div><div class="font-bold text-white">${c.glass}</div></div><div class="bg-slate-900 p-2 rounded border border-slate-700"><div class="text-[10px] text-slate-400">Декор</div><div class="font-bold text-emerald-300">${formatGarnishFull(c)}</div></div></div></div><div class="text-center text-[11px] text-slate-400">👆 Закрыть</div>`;
     }
     function flipCard(){ fcFlipped=!fcFlipped; renderFlashcard(); }
