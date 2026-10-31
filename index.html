@@ -64,7 +64,7 @@
   </div>
 
   <main class="max-w-xl mx-auto w-full px-4 py-3 flex-1 space-y-3">
-    <section id="view-exam" class="space-y-3"><div id="exam-container"><div class="text-center text-slate-400 py-10">Синхронизация с базой... ⏳</div></div></section>
+    <section id="view-exam" class="space-y-3"><div id="exam-container"><div class="text-center text-slate-400 py-10">Синхронизация с базе... ⏳</div></div></section>
     
     <div id="shared-category-bar" class="hidden space-y-1.5">
       <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Фильтр раздела:</div>
@@ -205,7 +205,6 @@
     </div>
   </div>
 
-
   <div id="install-modal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3.5">
       <div class="flex justify-between border-b border-slate-700 pb-2.5"><h3 class="font-bold text-amber-400">📲 На телефон</h3><button onclick="closeInstallModal()" class="text-slate-400">✖</button></div>
@@ -237,13 +236,12 @@
 
     let bartenderName = localStorage.getItem('ttk_bartender_name') || '';
     let restaurantName = localStorage.getItem('ttk_restaurant_name') || '';
-    let customNames = JSON.parse(localStorage.getItem('ttk_custom_names') || '{}');
     let serverProfiles = JSON.parse(localStorage.getItem('ttk_server_profiles') || '{}');
     let examProgress = {}, weakItems = [];
 
     let currentMode = 'exam', practiceCategory = 'ALL', quizFilter = 'all';
     let activeExam = null, examTimerId = null, questionDeadlineMs = 0, currentQuestionDurationSec = SHORT_QUESTION_SEC, timeLeftSec = SHORT_QUESTION_SEC;
-    let currentPracticeQ = null, fcIndex = 0, fcFlipped = false, builderCocktail = null, focusedBuilderInputId = null, renameTargetId = null, currentAdminTab = 'ann';
+    let currentPracticeQ = null, fcIndex = 0, fcFlipped = false, builderCocktail = null, focusedBuilderInputId = null, currentAdminTab = 'ann';
 
     function applyCategorySettings() {
       allItems = rawAllItems.filter(item => { let s = catSettings[item.catLabel]; return s ? s.app : true; });
@@ -311,8 +309,8 @@
       if(btnWeak) btnWeak.className = c==='WEAK' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40";
       if(selCat) {
         selCat.className = (c !== 'ALL' && c !== 'WEAK') 
-          ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition outline-none w-[130px] text-xs truncate cursor-pointer appearance-none" 
-          : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none w-[130px] text-xs truncate cursor-pointer appearance-none";
+          ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none" 
+          : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none";
         selCat.value = (c === 'ALL' || c === 'WEAK') ? 'HIDE' : c;
       }
       
@@ -386,7 +384,6 @@
         badge.className = "text-[10px] uppercase text-emerald-400 font-extrabold"; badge.textContent = "Обновление"; title.className = "text-base font-extrabold text-amber-400"; title.textContent = "🚀 Что нового";
       }
       
-      // Убрали принудительное добавление 📌
       container.innerHTML = currentAnnouncement.text.split('\n').filter(l=>l.trim()!=='').map(line => `<div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex gap-2.5 items-start"><div class="text-slate-200 leading-snug">${line}</div></div>`).join('');
     }
 
@@ -451,7 +448,6 @@
       const handleData = (data) => {
         if (data.items && data.items.length) rawAllItems = sanitizeLoadedItems(data.items);
         else document.getElementById('exam-container').innerHTML = `<div class="bg-rose-900/50 border border-rose-500 rounded-xl p-5 text-center text-rose-200">❌ База ТТК пуста! Добавьте напитки на лист "База_ТТК" в Google Таблице.</div>`;
-        if (data.customNames) { Object.keys(data.customNames).forEach(k => { if(!String(data.customNames[k]).startsWith('№')) customNames[k] = data.customNames[k]; }); localStorage.setItem('ttk_custom_names', JSON.stringify(customNames)); }
         if (data.profiles) { serverProfiles = data.profiles; localStorage.setItem('ttk_server_profiles', JSON.stringify(serverProfiles)); loadCurrentProfileProgress(); }
         if (data.announcement) currentAnnouncement = data.announcement;
         if (data.catSettings) catSettings = data.catSettings;
@@ -470,15 +466,7 @@
     function resolveWeakItem(id) { if (weakItems.includes(id)) { weakItems = weakItems.filter(x=>x!==id); saveCurrentProfileProgress(); updateWeakBadge(); } }
     function updateWeakBadge() { const b=document.getElementById('weak-count-badge'); if(b) b.textContent=weakItems.length; }
     
-    function forceCleanNames() {
-      if (confirm('Сбросить имена?')) {
-        customNames={}; localStorage.removeItem('ttk_custom_names');
-        if (typeof google !== 'undefined' && google.script) google.script.run.clearSharedCustomNames();
-        else if (EXTERNAL_API_URL) fetch(EXTERNAL_API_URL.trim(),{method:'POST',body:JSON.stringify({action:'clearCustomNames'})});
-        renderAll();
-      }
-    }
-    function getName(c) { return (customNames[c.id] && !String(customNames[c.id]).startsWith('№')) ? customNames[c.id] : c.defaultName; }
+    function getName(c) { return c.defaultName; }
     function formatGarnishTextOnly(c) { return (!c.garnish||!c.garnish.length) ? 'Без украшения' : c.garnish.map(g=>c.cat==='PREP'?g.name:g.name.trim()).join(' + '); }
     function formatGarnishFull(c) { return (!c.garnish||!c.garnish.length) ? 'Без украшения' : c.garnish.map(g=>(g.qty==='0'||g.name.toLowerCase().includes('без украшения'))?'Без украшения':(c.cat==='PREP'?g.name:`${g.name} (${g.qty} ${g.unit})`)).join(' + '); }
     function normalizeForCompare(str) { return String(str||'').toLowerCase().replace(/\([^)]*\d[^)]*\)/g,' ').replace(/[«»"'(),.+:-]/g,' ').replace(/коктейлей/g,'коктейля').replace(/апельсиновый|апельсина|апельсин/g,'апельсин').replace(/лимонный|лимона|лимон/g,'лимон').replace(/лаймовый|лайма|лайм/g,'лайм').replace(/изомальтовый|изомальта|изомальт/g,'изомальт').replace(/полукружка|полукруга/g,'полукруг').replace(/кружка|круг/g,'кружок').replace(/листочек|листок|листья|листик/g,'лист').split(/\s+/).filter(Boolean).sort().join(' '); }
@@ -493,7 +481,7 @@
     function updateTimerUI() {
       const b = document.getElementById('exam-timer-badge'); if(!b)return;
       b.textContent = `⏱ ${timeLeftSec} сек`;
-      b.className = timeLeftSec<=7 ? "px-3 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold text-xs" : "px-3 py-1 rounded-lg bg-slate-900 text-amber-300 border border-slate-700 font-bold text-xs";
+      b.className = timeLeftSec<=7 ? "px-3 py-1 rounded-lg bg-slate-900 text-amber-300 border border-slate-700 font-bold text-xs" : "px-3 py-1 rounded-lg bg-slate-900 text-amber-300 border border-slate-700 font-bold text-xs";
     }
     function handleExamTimeout() {
       if(!activeExam)return; const q=activeExam.queue[activeExam.index]; recordWeakItem(q.cocktail.id);
@@ -536,33 +524,6 @@
       if (allItems.length > 0) renderAll();
     }
 
-    function setPracticeCategory(c, noRender) {
-      clearActiveFocus(); 
-      if (c === 'WEAK' && !weakItems.length) {
-         let sel = document.getElementById('pcat-SELECT');
-         if(sel) sel.value = (practiceCategory !== 'ALL' && practiceCategory !== 'WEAK') ? practiceCategory : 'HIDE';
-         return showToast('🎉 Нет ошибок!');
-      }
-      
-      practiceCategory = c;
-      
-      const btnAll = document.getElementById('pcat-ALL');
-      const btnWeak = document.getElementById('pcat-WEAK');
-      const selCat = document.getElementById('pcat-SELECT');
-      
-      if(btnAll) btnAll.className = c==='ALL' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700";
-      if(btnWeak) btnWeak.className = c==='WEAK' ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition" : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-rose-300 border border-rose-500/40";
-      if(selCat) {
-        selCat.className = (c !== 'ALL' && c !== 'WEAK') 
-          ? "px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold transition outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none" 
-          : "px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 outline-none max-w-[180px] text-xs truncate cursor-pointer appearance-none";
-        selCat.value = (c === 'ALL' || c === 'WEAK') ? 'HIDE' : c;
-      }
-      
-      fcIndex = 0; fcFlipped = false; builderCocktail = null;
-      if (!noRender) { generatePracticeQuestion(); renderAll(); }
-    }
-    
     function getPracticePool() {
       if (practiceCategory === 'ALL') return allItems;
       if (practiceCategory === 'WEAK') { const w = allItems.filter(x=>weakItems.includes(x.id)); return w.length ? w : allItems; }
@@ -682,18 +643,6 @@
     function renderList() {
       const q=document.getElementById('search-input').value.toLowerCase().trim();
       document.getElementById('list-container').innerHTML = getPracticePool().filter(c=>getName(c).toLowerCase().includes(q)||c.glass.toLowerCase().includes(q)||c.ingredients.some(i=>i.name.toLowerCase().includes(q)||c.garnish.some(g=>g.name.toLowerCase().includes(q)))).map(c=>`<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-2"><div class="flex justify-between"><div><span class="text-[10px] text-slate-400 font-bold uppercase">${c.catLabel}</span><h3 class="text-sm font-bold text-amber-400">${getName(c)}</h3><p class="text-[11px] text-slate-400">${c.method} • <span class="text-slate-200">${c.glass}</span></p></div><button onclick="setMode('builder');initBuilder(${c.id})" class="px-2 py-1 bg-amber-500/20 text-amber-300 text-xs rounded shrink-0 h-fit">Собрать</button></div><div class="bg-slate-900/80 rounded p-2 text-xs">${c.ingredients.map(i=>`<div class="flex justify-between"><span class="text-slate-300">${i.name}</span><span class="font-bold text-white">${i.qty} ${i.unit}</span></div>`).join('')}</div><div class="flex justify-between text-xs pt-1"><span class="text-slate-400">Декор:</span><span class="font-semibold text-emerald-300 text-right">${formatGarnishFull(c)}</span></div></div>`).join('');
-    }
-
-    function openRenameModal(id) { renameTargetId=id; document.getElementById('rename-input').value=getName(allItems.find(x=>x.id===id)); document.getElementById('rename-modal').classList.remove('hidden'); }
-    function closeRenameModal() { renameTargetId=null; document.getElementById('rename-modal').classList.add('hidden'); }
-    function saveRename() {
-      const v=document.getElementById('rename-input').value.trim();
-      if(v&&renameTargetId) {
-        customNames[renameTargetId]=v; localStorage.setItem('ttk_custom_names',JSON.stringify(customNames));
-        if(typeof google!=='undefined'&&google.script) google.script.run.saveSharedCustomName(renameTargetId,v);
-        else if(EXTERNAL_API_URL) fetch(EXTERNAL_API_URL.trim(),{method:'POST',body:JSON.stringify({action:'saveCustomName',id:renameTargetId,newName:v})});
-      }
-      closeRenameModal(); renderAll();
     }
 
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) { const b=document.getElementById('install-help-btn'); if(b) b.classList.add('hidden'); }
