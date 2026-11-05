@@ -458,7 +458,52 @@
       else if (EXTERNAL_API_URL) fetch(EXTERNAL_API_URL.trim()+(EXTERNAL_API_URL.includes('?')?'&':'?')+'action=getInitData').then(r=>r.json()).then(handleData).catch(()=>{});
     }
 
-    document.addEventListener('visibilitychange', () => { if (document.hidden && isExamInProgress()) { activeExam.tabSwitches = (activeExam.tabSwitches||0)+1; showToast(`⚠️ Сворачивание окна (${activeExam.tabSwitches})!`); }});
+   document.addEventListener('visibilitychange', () => { 
+      if (document.hidden && isExamInProgress()) { 
+        abortExamAndLog("Сворачивание окна (читерство)"); 
+      }
+    });
+
+    function abortExamAndLog(reason) {
+      if(!activeExam) return;
+      stopQuestionTimer();
+      const t = activeExam.queue.length;
+      
+      // Добавляем красную ошибку с причиной в результаты
+      activeExam.mistakes.push({ 
+        drinkName: "🚨 НАРУШЕНИЕ", 
+        questionText: reason, 
+        shortLabel: "Срыв", 
+        chosenAnswer: "Экзамен прерван", 
+        correctAnswer: "Провал" 
+      });
+      
+      const payload = { 
+        action:"saveQuizResult", 
+        payload: { 
+          bartenderName, restaurantName, categoryCode: activeExam.catCode, 
+          categoryLabel: CATEGORY_META[activeExam.catCode].title, modeName: activeExam.title, 
+          correct: activeExam.correct, total: t, percent: 0, // Жестко ставим 0%
+          mistakes: activeExam.mistakes.map(m=>`${m.drinkName} [${m.questionText} -> ${m.chosenAnswer} | ✅ ${m.correctAnswer}]`) 
+        } 
+      };
+      
+      // Записываем 0% в локальный прогресс, чтобы сразу обновить Зачетку
+      examProgress[activeExam.catCode] = { pct: 0, date: new Date().toLocaleDateString('ru-RU') }; 
+      saveCurrentProfileProgress();
+      
+      activeExam = null;
+      updateHeaderUI();
+      renderExamView();
+      showToast("❌ " + reason);
+
+      // Отправляем данные в Google Таблицу на лист "Результаты"
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(r=>{ if(r.profile){serverProfiles[makeUserKey(bartenderName,restaurantName)]=r.profile;localStorage.setItem('ttk_server_profiles',JSON.stringify(serverProfiles));} }).saveQuizResult(payload.payload);
+      } else if(EXTERNAL_API_URL) {
+        fetch(EXTERNAL_API_URL.trim(), {method:'POST',body:JSON.stringify(payload)}).then(r=>r.json()).then(r=>{if(r.profile){serverProfiles[makeUserKey(bartenderName,restaurantName)]=r.profile;localStorage.setItem('ttk_server_profiles',JSON.stringify(serverProfiles));}});
+      }
+    }
     function clearActiveFocus() { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
     function showToast(msg) { const el = document.getElementById('toast-alert'); if(el){ el.textContent=msg; el.classList.remove('hidden'); el.classList.add('flex'); clearTimeout(window._tt); window._tt=setTimeout(()=>el.classList.add('hidden'),3200); }}
     function isExamInProgress() { return activeExam && activeExam.index < activeExam.queue.length; }
@@ -566,7 +611,12 @@
       updateHeaderUI(); renderExamView();
     }
     
-    function cancelActiveExam() { clearActiveFocus(); if(confirm('Досрочно прервать?')){ stopQuestionTimer(); activeExam=null; updateHeaderUI(); renderExamView(); } }
+    function cancelActiveExam() { 
+      clearActiveFocus(); 
+      if(confirm('Досрочно прервать? Результат (0%) будет отправлен в базу!')) { 
+        abortExamAndLog("Прервано вручную"); 
+      } 
+    }
     
     function answerBlindExam(idx) {
       clearActiveFocus(); stopQuestionTimer(); const q=activeExam.queue[activeExam.index], c=q.cocktail;
